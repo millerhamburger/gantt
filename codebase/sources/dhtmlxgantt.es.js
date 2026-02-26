@@ -17384,7 +17384,87 @@ var ViewCell = function(_super) {
   };
   return ViewCell2;
 }(Cell);
-const Resizer = null;
+const Resizer = function(_super) {
+  __extends(Resizer, _super);
+  function Resizer(parent, config, factory, gantt2) {
+    var _this = _super.call(this, parent, config, factory, gantt2) || this;
+    _this.$name = "resizer";
+    return _this;
+  }
+  Resizer.prototype.$toHTML = function() {
+    return "<div class='gantt_layout_cell gantt_resizer' data-cell-id='" + this.$id + "' style='padding-top:0px;'></div>";
+  };
+  Resizer.prototype.$fill = function(node, parent) {
+    _super.prototype.$fill.call(this, node, parent);
+    var _this = this;
+    var gantt2 = this.$gantt;
+    node.onmousedown = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      var siblings = _this._getSiblings();
+      var prev = siblings.prev;
+      var next = siblings.next;
+
+      if (!prev || !next) return;
+
+      var initialPrevWidth = prev.$view.offsetWidth;
+      var initialNextWidth = next.$view.offsetWidth;
+      var startX = e.clientX;
+
+      console.log("Resizing", initialPrevWidth, initialNextWidth, e );
+
+      function onMove(e) {
+        var delta = e.clientX - startX;
+        var newPrevWidth = initialPrevWidth + delta;
+        var newNextWidth = initialNextWidth - delta;
+
+        if (newPrevWidth > 10 && newNextWidth > 10) {
+            gantt2.config.grid_width = newPrevWidth;
+            gantt2.render();
+        }
+      }
+
+      function onUp() {
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onUp);
+        gantt2.render(); // Force a full render to ensure state is consistent
+      }
+
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onUp);
+    };
+  };
+  Resizer.prototype._getSiblings = function() {
+      this._behind = null;
+      this._front = null;
+      var cells = this.$parent.$cells;
+      var index = -1;
+      for (var i = 0; i < cells.length; i++) {
+          if (cells[i] === this) {
+              index = i;
+              break;
+          }
+      }
+      if (index > 0) this._behind = cells[index - 1];
+      if (index < cells.length - 1) this._front = cells[index + 1];
+      console.log(this._behind, this._front);
+      return { prev: this._behind, next: this._front };
+  };
+  Resizer.prototype.getSize = function() {
+    var size = { width: 0, height: 0, gravity: 0 };
+    if (this._isHorizontal()) {
+      size.height = 1;
+    } else {
+      size.width = 1;
+    }
+    return size;
+  };
+  Resizer.prototype._isHorizontal = function() {
+     return this.$parent.$config.type == "rows";
+  };
+  return Resizer;
+}(Cell);
 var ScrollbarCell = function(_super) {
   var SCROLL_MODIFIER_KEYS = ["altKey", "shiftKey", "metaKey"];
   __extends(ScrollbarCell2, _super);
