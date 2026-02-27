@@ -2,55 +2,167 @@
  * @Author: YEYI millerye1995@foxmail.com
  * @Date: 2026-02-26 10:34:00
  * @LastEditors: YEYI millerye1995@foxmail.com
- * @LastEditTime: 2026-02-26 11:03:04
+ * @LastEditTime: 2026-02-26 18:03:08
  * @FilePath: \gantt\index.html
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DHTMLX Gantt 预览</title>
-    <link rel="stylesheet" href="./codebase/dhtmlxgantt.css">
+    <link rel="stylesheet" href="./codebase/sources/dhtmlxgantt.css" />
     <style>
-        html, body {
-            height: 100%;
-            padding: 0;
-            margin: 0;
-            overflow: hidden;
-        }
-        #gantt_here {
-            width: 100%;
-            height: 100%;
-        }
+      html,
+      body {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+      }
+      #gantt_here {
+        width: 100%;
+        height: 100%;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div id="gantt_here"></div>
     <script type="module">
-        import { gantt } from './codebase/sources/dhtmlxgantt.es.js';
+      import { gantt } from "./codebase/sources/dhtmlxgantt.es.js";
 
-        // 配置甘特图
-        gantt.config.date_format = "%Y-%m-%d %H:%i";
-        
-        // 初始化数据
-        const data = {
-            data: [
-                { id: 1, text: "项目开始", start_date: "2026-02-26", duration: 3, progress: 0.6 },
-                { id: 2, text: "任务 #1", start_date: "2026-03-01", duration: 5, progress: 0.4, parent: 1 },
-                { id: 3, text: "任务 #2", start_date: "2026-03-02", duration: 4, progress: 0.2, parent: 1 }
-            ],
-            links: [
-                { id: 1, source: 1, target: 2, type: "1" }
-            ]
-        };
+      // 获取文档流宽度
+      const docWidth = document.documentElement.clientWidth;
+      const gridWidth = docWidth / 2;
 
-        // 初始化
-        gantt.init("gantt_here");
-        gantt.parse(data);
+      // 配置甘特图
+      gantt.config.date_format = "%Y-%m-%d %H:%i";
 
-        console.log("Gantt initialized with version:", gantt.version);
+      gantt.config.grid_width = gridWidth > 1000 ? gridWidth : 1000;
+
+      gantt.config.columns = [
+        { name: "text", label: "任务名称", width: "*", tree: true },
+        { name: "start_date", label: "开始时间", width: 100, align: "center" },
+        { name: "end_date", label: "完成时间", width: 100, align: "center" },
+        {
+          name: "duration",
+          label: "工期",
+          align: "center",
+          template: function (task) {
+            return task.duration + "天";
+          },
+        },
+        {
+          name: "status",
+          label: "执行情况",
+          align: "center",
+          template: function (task) {
+            if (task.progress === 0) {
+              return "未开始";
+            }
+            return task.progress === 1 ? "已完成" : "进行中";
+          },
+        },
+        {
+          name: "progress",
+          label: "完成比例",
+          align: "center",
+          template: function (task) {
+            return Math.round(task.progress * 100) + "%";
+          },
+        },
+        {
+          name: "owner",
+          label: "负责人",
+          width: 80,
+          align: "center",
+          template: function (task) {
+            return task.owner || "-";
+          },
+        },
+        // 相关方
+        {
+          name: "related",
+          label: "相关方",
+          width: 80,
+          align: "center",
+          template: function (task) {
+            return task.related || "-";
+          },
+        },
+        // 前置任务
+        {
+          name: "predecessors",
+          label: "前置任务",
+          width: 80,
+          align: "center",
+          template: function (task) {
+            return task.predecessors || "-";
+          },
+        },
+        // 任务描述
+        {
+          name: "description",
+          label: "任务描述",
+          width: 150,
+          align: "center",
+          template: function (task) {
+            return task.description || "-";
+          },
+        },
+
+        { name: "add", label: "", width: 44 },
+      ];
+
+
+      // 默认的 lightbox 定义   
+      gantt.config.lightbox.sections=[
+          {name:"任务名称", height:70, map_to:"text", type:"textarea", focus:true},
+          {name:"任务类型", type: "typeselect", map_to: "type"},
+          {name:"time",        height:72, map_to:"auto", type:"duration"},
+          {name:"父任务", type:"parent", allow_root:"true", root_label:"无父任务"},
+          {name:"任务描述", height:70, map_to:"description", type:"textarea"},
+      ];
+      // 中文
+      gantt.i18n.setLocale("cn");
+
+      // 初始化数据
+      const data = {
+        data: [
+          {
+            id: 1,
+            text: "项目开始",
+            start_date: "2026-02-26",
+            duration: 3,
+            progress: 0.6,
+            open: true,
+          },
+          {
+            id: 2,
+            text: "任务 #1",
+            start_date: "2026-03-01",
+            duration: 5,
+            progress: 0.4,
+            parent: 1,
+          },
+          {
+            id: 3,
+            text: "任务 #2",
+            start_date: "2026-03-02",
+            duration: 4,
+            progress: 0.2,
+            parent: 1,
+          },
+        ],
+        links: [{ id: 1, source: 1, target: 2, type: "1" }],
+      };
+
+      // 初始化
+      gantt.init("gantt_here");
+      gantt.parse(data);
+
+      console.log("Gantt initialized with version:", gantt.version);
     </script>
-</body>
+  </body>
 </html>

@@ -2904,6 +2904,11 @@ div.dhx_modal_cover {
 .gantt_resizer {
   cursor: e-resize;
   position: relative;
+  z-index: 1;
+  width: 4px !important;
+}
+.gantt_resizer:hover { 
+  background-color: green;
 }
 .gantt_resizer_y {
   cursor: n-resize;
