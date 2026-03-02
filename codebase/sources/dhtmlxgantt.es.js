@@ -14472,7 +14472,7 @@ function data(gantt2) {
 }
 function data_task_types(gantt2) {
   gantt2.getTaskType = function(type) {
-    return "task";
+    return type ||"task";
   };
 }
 function cached_functions(gantt2) {
