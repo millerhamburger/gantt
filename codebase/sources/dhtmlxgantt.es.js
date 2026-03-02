@@ -14980,6 +14980,130 @@ https://docs.dhtmlx.com/gantt/faq.html#theganttchartisntrenderedcorrectly`);
     if (className.indexOf("gantt_tree_icon") !== -1 && (className.indexOf("gantt_close") !== -1 || className.indexOf("gantt_open") !== -1)) return true;
     return false;
   };
+  // 是否关键任务
+  gantt2.isCriticalTask = function (task) {
+    if (!this.config.highlight_critical_path) return false;
+
+    // 缓存计算结果，避免重复计算
+    // if (this._criticalPathCache && this._criticalPathCache[task.id] !== undefined) {
+    //   return this._criticalPathCache[task.id];
+    // }
+
+    // 1. 获取所有任务和链接
+    var tasks = this.getTaskByTime();
+    var links = this.getLinks();
+
+    // 2. 构建图结构 (邻接表)
+    var adj = {}; //后继
+    var rev_adj = {}; //前驱
+    var taskMap = {};
+    var durationMap = {};
+
+    tasks.forEach(function (t) {
+      taskMap[t.id] = t;
+      durationMap[t.id] = t.duration;
+      adj[t.id] = [];
+      rev_adj[t.id] = [];
+    });
+
+    links.forEach(function (l) {
+      if (taskMap[l.source] && taskMap[l.target]) {
+        adj[l.source].push(l.target);
+        rev_adj[l.target].push(l.source);
+      }
+    });
+
+    // 3. 计算最早开始时间 (ES) - Forward Pass
+    var es = {};
+    var ef = {};
+    var maxEF = 0; // 项目总工期
+
+    // 拓扑排序 (简化版：直接多次迭代或假定ID顺序，这里用简单的迭代松弛)
+    var inDegree = {};
+    var queue = [];
+
+    tasks.forEach(function (t) {
+      inDegree[t.id] = rev_adj[t.id].length;
+      if (inDegree[t.id] === 0) {
+        queue.push(t.id);
+        es[t.id] = 0; // 相对时间 0
+        ef[t.id] = durationMap[t.id];
+        if (ef[t.id] > maxEF) maxEF = ef[t.id];
+      }
+    });
+
+    var sortedOrder = [];
+    var head = 0;
+    while (head < queue.length) {
+      var u = queue[head++];
+      sortedOrder.push(u);
+
+      if (ef[u] > maxEF) maxEF = ef[u];
+
+      adj[u].forEach(function (v) {
+        inDegree[v]--;
+        if (inDegree[v] === 0) {
+          queue.push(v);
+        }
+        // 松弛操作
+        // ES[v] = max(ES[v], EF[u])
+        if (es[v] === undefined || ef[u] > es[v]) {
+          es[v] = ef[u];
+          ef[v] = es[v] + durationMap[v];
+        }
+      });
+    }
+
+    // 4. 计算最晚开始时间 (LS) - Backward Pass
+    var lf = {};
+    var ls = {};
+
+    // 初始化 LF 为项目总工期
+    tasks.forEach(function (t) {
+      lf[t.id] = maxEF;
+      ls[t.id] = lf[t.id] - durationMap[t.id];
+    });
+
+    // 逆向遍历
+    for (var i = sortedOrder.length - 1; i >= 0; i--) {
+      var u = sortedOrder[i];
+      adj[u].forEach(function (v) {
+        // LF[u] = min(LF[u], LS[v])
+        if (ls[v] < lf[u]) {
+          lf[u] = ls[v];
+          ls[u] = lf[u] - durationMap[u];
+        }
+      });
+    }
+
+    // 5. 计算总时差 (Total Slack)
+    // Slack = LS - ES
+    // 如果 Slack = 0，则是关键路径
+    this._criticalPathCache = this._criticalPathCache || {};
+    var self = this;
+    tasks.forEach(function (t) {
+      var slack = ls[t.id] - es[t.id];
+      // 考虑浮点数误差
+      self._criticalPathCache[t.id] = Math.abs(slack) < 1e-5;
+    });
+
+    return this._criticalPathCache[task.id];
+  };
+
+  // 清除缓存的钩子
+  // 注意：在 extend 函数内部，我们可能无法直接调用 attachEvent，除非 gantt2 已经有了这个方法
+  // 假设 extend(gantt2) 是在 Gantt 初始化之后调用的，或者 gantt2 原型上有 attachEvent
+  // 查看上下文，gantt2 应该是一个 Gantt 实例或者原型
+  // if (gantt2.attachEvent) {
+  //     gantt2.attachEvent("onAfterTaskUpdate", function(){ this._criticalPathCache = null; });
+  //     gantt2.attachEvent("onAfterLinkAdd", function(){ this._criticalPathCache = null; });
+  //     gantt2.attachEvent("onAfterLinkDelete", function(){ this._criticalPathCache = null; });
+  //     gantt2.attachEvent("onParse", function(){ this._criticalPathCache = null; });
+  // }
+  
+
+
+
 }
 function extend(gantt2) {
   gantt2.destructor = function() {
