@@ -2,7 +2,7 @@
  * @Author: YEYI millerye1995@foxmail.com
  * @Date: 2026-02-26 10:34:00
  * @LastEditors: YEYI millerye1995@foxmail.com
- * @LastEditTime: 2026-03-04 10:27:56
+ * @LastEditTime: 2026-03-04 13:40:29
  * @FilePath: \gantt\index.html
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -46,18 +46,26 @@
         background: #f0f0f0;
       }
       .gantt_control button.active {
-        background: #537CFA;
+        background: #537cfa;
         color: #fff;
-        border-color: #537CFA;
+        border-color: #537cfa;
       }
     </style>
   </head>
   <body>
     <div class="gantt_control">
-      <button id="toggle_critical" class="active" onclick="toggleCritical()">关键路径</button>
-      <button id="toggle_baseline" class="active" onclick="toggleBaseline()">基线</button>
-      <span style="margin-left: 20px; border-left: 1px solid #cecece; height: 30px;"></span>
-      <button id="scale_day" class="active" onclick="setScale('day')">日</button>
+      <button id="toggle_critical" class="active" onclick="toggleCritical()">
+        关键路径
+      </button>
+      <button id="toggle_baseline" class="active" onclick="toggleBaseline()">
+        基线
+      </button>
+      <span
+        style="margin-left: 20px; border-left: 1px solid #cecece; height: 30px"
+      ></span>
+      <button id="scale_day" class="active" onclick="setScale('day')">
+        日
+      </button>
       <button id="scale_week" onclick="setScale('week')">周</button>
       <button id="scale_month" onclick="setScale('month')">月</button>
     </div>
@@ -67,30 +75,31 @@
       import { locale } from "./codebase/sources/config/locale.es.js";
 
       // 暴露给 window 以便 HTML 按钮调用
-      window.toggleCritical = function() {
-        gantt.config.highlight_critical_path = !gantt.config.highlight_critical_path;
-        
+      window.toggleCritical = function () {
+        gantt.config.highlight_critical_path =
+          !gantt.config.highlight_critical_path;
+
         const btn = document.getElementById("toggle_critical");
         if (gantt.config.highlight_critical_path) {
           btn.classList.add("active");
         } else {
           btn.classList.remove("active");
         }
-        
+
         gantt.render();
       };
 
-      window.toggleBaseline = function() {
+      window.toggleBaseline = function () {
         // 简单的切换基线显示逻辑
         if (!gantt.config.baselines) {
-             gantt.config.baselines = { render_mode: false };
+          gantt.config.baselines = { render_mode: false };
         }
-        
+
         // 切换 render_mode
         if (!gantt.config.baselines.render_mode) {
-             gantt.config.baselines.render_mode = "separateRow";
+          gantt.config.baselines.render_mode = "separateRow";
         } else {
-             gantt.config.baselines.render_mode = false;
+          gantt.config.baselines.render_mode = false;
         }
 
         const btn = document.getElementById("toggle_baseline");
@@ -103,29 +112,29 @@
         gantt.render();
       };
 
-      window.setScale = function(mode) {
+      window.setScale = function (mode) {
         const modes = ["day", "week", "month"];
-        modes.forEach(m => {
-             const btn = document.getElementById("scale_" + m);
-             if (m === mode) btn.classList.add("active");
-             else btn.classList.remove("active");
+        modes.forEach((m) => {
+          const btn = document.getElementById("scale_" + m);
+          if (m === mode) btn.classList.add("active");
+          else btn.classList.remove("active");
         });
 
         if (mode === "day") {
-            gantt.config.scales = [
-                {unit: "month", step: 1, format: "%Y年%F"},
-                {unit: "day", step: 1, format: "%d日"}
-            ];
+          gantt.config.scales = [
+            { unit: "month", step: 1, format: "%Y年%F" },
+            { unit: "day", step: 1, format: "%d日" },
+          ];
         } else if (mode === "week") {
-            gantt.config.scales = [
-                {unit: "month", step: 1, format: "%Y年%F"},
-                {unit: "week", step: 1, format: "%W周"}
-            ];
+          gantt.config.scales = [
+            { unit: "month", step: 1, format: "%Y年%F" },
+            { unit: "week", step: 1, format: "%W周" },
+          ];
         } else if (mode === "month") {
-             gantt.config.scales = [
-                {unit: "year", step: 1, format: "%Y年"},
-                {unit: "month", step: 1, format: "%M"}
-            ];
+          gantt.config.scales = [
+            { unit: "year", step: 1, format: "%Y年" },
+            { unit: "month", step: 1, format: "%M" },
+          ];
         }
         gantt.render();
       };
@@ -141,8 +150,8 @@
       gantt.config.grid_width = gridWidth > 1000 ? gridWidth : 1000;
 
       gantt.config.scales = [
-        {unit: "month", step: 1, format: "%Y年%F"},
-        {unit: "day", step: 1, format: "%j日"}
+        { unit: "month", step: 1, format: "%Y年%F" },
+        { unit: "day", step: 1, format: "%j日" },
       ];
 
       gantt.config.resize_rows = true;
@@ -152,14 +161,77 @@
 
       gantt.config.baselines.render_mode = "separateRow";
 
-      gantt.plugins({ /*!*/
-          critical_path: true /*!*/
+      gantt.plugins({
+        /*!*/ critical_path: true /*!*/,
       }); /*!*/
 
       gantt.config.highlight_critical_path = true;
 
       gantt.config.columns = [
         { name: "text", label: "任务名称", width: "*", tree: true },
+        {
+          name: "base_start_date",
+          label: "基线开始时间",
+          width: 100,
+          align: "center",
+          template: function (task) {
+            const baselines = gantt.getTaskBaselines(task.id);
+            if (baselines && baselines.length !== 0) {
+              return baselines.reduce(
+                (prev, cur) => {
+                  if (!prev.start_date || cur.start_date < prev.start_date) {
+                    prev.start_date = cur.start_date;
+                  }
+                  return prev;
+                },
+                { start_date: null },
+              ).start_date;
+            } else {
+              return "-";
+            }
+          },
+        },
+        {
+          name: "base_end_date",
+          label: "基线完成时间",
+          width: 100,
+          align: "center",
+          template: function (task) {
+            const baselines = gantt.getTaskBaselines(task.id);
+            if (baselines && baselines.length !== 0) {
+              return baselines.reduce(
+                (prev, cur) => {
+                  if (!prev.end_date || cur.end_date > prev.end_date) {
+                    prev.end_date = cur.end_date;
+                  }
+                  return prev;
+                },
+                { end_date: null },
+              ).end_date;
+            } else {
+              return "-";
+            }
+          },
+        },
+        {
+          name: "base_duration",
+          label: "基线工期",
+          align: "center",
+          template: function (task) {
+            const baselines = gantt.getTaskBaselines(task.id);
+            if (baselines && baselines.length !== 0) {
+              return baselines.reduce(
+                (prev, cur) => {
+                  prev.duration += cur.duration;
+                  return prev;
+                },
+                { duration: 0 },
+              ).duration;
+            } else {
+              return "-";
+            }
+          },
+        },
         { name: "start_date", label: "开始时间", width: 100, align: "center" },
         { name: "end_date", label: "完成时间", width: 100, align: "center" },
         {
@@ -232,20 +304,92 @@
         { name: "add", label: "", width: 44 },
       ];
 
+      // 默认的 lightbox 定义
+      gantt.config.lightbox.sections = [
+        {
+          name: "任务名称",
+          height: 70,
+          map_to: "text",
+          type: "textarea",
+          focus: true,
+        },
+        { name: "任务类型", type: "typeselect", map_to: "type" },
+        { name: "time", height: 72, map_to: "auto", type: "duration" },
+        {
+          name: "父任务",
+          type: "parent",
+          allow_root: "true",
+          root_label: "无父任务",
+        },
+        {
+          name: "任务描述",
+          height: 70,
+          map_to: "description",
+          type: "textarea",
+        },
+        { name: "基线", height: 100, type: "baselines", map_to: "baselines" },
+      ];
 
-      // 默认的 lightbox 定义   
-      gantt.config.lightbox.sections=[
-          {name:"任务名称", height:70, map_to:"text", type:"textarea", focus:true},
-          {name:"任务类型", type: "typeselect", map_to: "type"},
-          {name:"time",        height:72, map_to:"auto", type:"duration"},
-          {name:"父任务", type:"parent", allow_root:"true", root_label:"无父任务"},
-          {name:"任务描述", height:70, map_to:"description", type:"textarea"},
-          { name: "基线", height: 100, type: "baselines", map_to: "baselines" },
+      gantt.config.lightbox.project_sections = [
+        {
+          name: "任务名称",
+          height: 70,
+          map_to: "text",
+          type: "textarea",
+          focus: true,
+        },
+        { name: "任务类型", type: "typeselect", map_to: "type" },
+        {
+          name: "父任务",
+          type: "parent",
+          allow_root: "true",
+          root_label: "无父任务",
+        },
+        {
+          name: "任务描述",
+          height: 70,
+          map_to: "description",
+          type: "textarea",
+        },
+        { name: "基线", height: 100, type: "baselines", map_to: "baselines" },
+      ];
+
+      console.log(gantt.config.lightbox.milestone_sections, 1111);
+
+      gantt.config.lightbox.milestone_sections = [
+        {
+          name: "任务名称",
+          height: 70,
+          map_to: "text",
+          type: "textarea",
+          focus: true,
+        },
+        { name: "任务类型", type: "typeselect", map_to: "type" },
+        {
+          name: "time",
+          single_date: true,
+          height: 72,
+          map_to: "auto",
+          type: "duration",
+        },
+        {
+          name: "父任务",
+          type: "parent",
+          allow_root: "true",
+          root_label: "无父任务",
+        },
+        {
+          name: "任务描述",
+          height: 70,
+          map_to: "description",
+          type: "textarea",
+        },
+        { name: "基线", height: 100, type: "baselines", map_to: "baselines" },
       ];
 
       // 中文
-      gantt.i18n.addLocale("cn", locale);    
-      gantt.i18n.setLocale("cn")
+      gantt.i18n.addLocale("cn", locale);
+      gantt.i18n.setLocale("cn");
 
       // 初始化数据
       const data = {
@@ -269,7 +413,7 @@
             progress: 0.5,
             parent: 1,
             open: true,
-            end_date: "2025-04-06 00:00:00"
+            end_date: "2025-04-06 00:00:00",
           },
           {
             id: 5,
@@ -279,9 +423,18 @@
             progress: 0.34,
             parent: 2,
             open: true,
-            end_date: "2025-04-08 00:00:00"
+            end_date: "2025-04-08 00:00:00",
           },
-          { id: 6, start_date: "2025-04-09 00:00:00", duration: 4, text: "Task #1.2", progress: 0.5, parent: 2, open: true, end_date: "2025-04-13 00:00:00" },
+          {
+            id: 6,
+            start_date: "2025-04-09 00:00:00",
+            duration: 4,
+            text: "Task #1.2",
+            progress: 0.5,
+            parent: 2,
+            open: true,
+            end_date: "2025-04-13 00:00:00",
+          },
           {
             id: 3,
             start_date: "2025-04-06 00:00:00",
@@ -291,9 +444,18 @@
             parent: 1,
             open: true,
             end_date: "2025-04-06 00:00:00",
-            type: "milestone"
+            type: "milestone",
           },
-          { id: 7, start_date: "2025-04-11 00:00:00", duration: 5, text: "Task #2.1", progress: 0.2, parent: 3, open: true, end_date: "2025-04-16 00:00:00" },
+          {
+            id: 7,
+            start_date: "2025-04-11 00:00:00",
+            duration: 5,
+            text: "Task #2.1",
+            progress: 0.2,
+            parent: 3,
+            open: true,
+            end_date: "2025-04-16 00:00:00",
+          },
           {
             id: 8,
             start_date: "2025-04-05 00:00:00",
@@ -302,7 +464,7 @@
             progress: 0.9,
             parent: 3,
             open: true,
-            end_date: "2025-04-09 00:00:00"
+            end_date: "2025-04-09 00:00:00",
           },
           {
             id: 12,
@@ -315,7 +477,16 @@
             type: "project",
             end_date: "2025-04-18 00:00:00",
           },
-          { id: 13, start_date: "2025-04-02 00:00:00", duration: 10, text: "Task #1", progress: 0.2, parent: 12, open: true, end_date: "2025-04-12 00:00:00" },
+          {
+            id: 13,
+            start_date: "2025-04-02 00:00:00",
+            duration: 10,
+            text: "Task #1",
+            progress: 0.2,
+            parent: 12,
+            open: true,
+            end_date: "2025-04-12 00:00:00",
+          },
           {
             id: 14,
             start_date: "2025-04-03 00:00:00",
@@ -324,7 +495,7 @@
             progress: 0.9,
             parent: 12,
             render: "split",
-            end_date: "2025-04-05 00:00:00"
+            end_date: "2025-04-05 00:00:00",
           },
           {
             id: 18,
@@ -334,9 +505,18 @@
             progress: 0.3,
             parent: 14,
             open: true,
-            end_date: "2025-04-07 00:00:00"
+            end_date: "2025-04-07 00:00:00",
           },
-          { id: 19, start_date: "2025-04-09 00:00:00", duration: 2, text: "Task #2.2", progress: 0.6, parent: 14, open: true, end_date: "2025-04-11 00:00:00" },
+          {
+            id: 19,
+            start_date: "2025-04-09 00:00:00",
+            duration: 2,
+            text: "Task #2.2",
+            progress: 0.6,
+            parent: 14,
+            open: true,
+            end_date: "2025-04-11 00:00:00",
+          },
           {
             id: 20,
             start_date: "2025-04-12 00:00:00",
@@ -345,7 +525,7 @@
             progress: 0.5,
             parent: 14,
             open: true,
-            end_date: "2025-04-14 00:00:00"
+            end_date: "2025-04-14 00:00:00",
           },
           {
             id: 21,
@@ -355,7 +535,7 @@
             progress: 0.7,
             parent: 14,
             open: true,
-            end_date: "2025-04-18 00:00:00"
+            end_date: "2025-04-18 00:00:00",
           },
           {
             id: 15,
@@ -365,7 +545,7 @@
             progress: 0.6,
             parent: 12,
             open: true,
-            end_date: "2025-04-08 00:00:00"
+            end_date: "2025-04-08 00:00:00",
           },
           {
             id: 16,
@@ -375,7 +555,7 @@
             progress: 0.2,
             parent: 12,
             render: "split",
-            end_date: "2025-04-05 00:00:00"
+            end_date: "2025-04-05 00:00:00",
           },
           {
             id: 22,
@@ -385,7 +565,7 @@
             progress: 1,
             parent: 16,
             open: true,
-            end_date: "2025-04-07 00:00:00"
+            end_date: "2025-04-07 00:00:00",
           },
           {
             id: 23,
@@ -395,7 +575,7 @@
             progress: 1,
             parent: 16,
             open: true,
-            end_date: "2025-04-10 00:00:00"
+            end_date: "2025-04-10 00:00:00",
           },
           {
             id: 24,
@@ -406,47 +586,20 @@
             parent: 16,
             open: true,
             type: "milestone",
-            end_date: "2025-04-13 00:00:00"
+            end_date: "2025-04-13 00:00:00",
           },
-          { id: 17, start_date: "2025-04-16 00:00:00", duration: 2, text: "Task #5", progress: 0.5, parent: 12, open: true, end_date: "2025-04-18 00:00:00" },
+          {
+            id: 17,
+            start_date: "2025-04-16 00:00:00",
+            duration: 2,
+            text: "Task #5",
+            progress: 0.5,
+            parent: 12,
+            open: true,
+            end_date: "2025-04-18 00:00:00",
+          },
         ],
         links: [],
-        baselines: [
-          { id: 1, task_id: 1, start_date: "2025-04-06 00:00:00", duration: 3, end_date: "2025-04-09 00:00:00" },
-          { id: 2, task_id: 1, start_date: "2025-04-03 00:00:00", duration: 2, end_date: "2025-04-05 00:00:00" },
-          { id: 3, task_id: 1, start_date: "2025-04-06 00:00:00", duration: 2, end_date: "2025-04-08 00:00:00" },
-          { id: 4, task_id: 2, start_date: "2025-04-06 00:00:00", duration: 1, end_date: "2025-04-10 00:00:00" },
-          { id: 5, task_id: 2, start_date: "2025-04-11 00:00:00", duration: 1, end_date: "2025-04-12 00:00:00" },
-          { id: 6, task_id: 2, start_date: "2025-04-13 00:00:00", duration: 1, end_date: "2025-04-14 00:00:00" },
-          { id: 7, task_id: 2, start_date: "2025-04-15 00:00:00", duration: 3, end_date: "2025-04-18 00:00:00" },
-          { id: 8, task_id: 2, start_date: "2025-04-19 00:00:00", duration: 1, end_date: "2025-04-20 00:00:00" },
-          { id: 9, task_id: 3, start_date: "2025-04-10 00:00:00", duration: 3, end_date: "2025-04-13 00:00:00" },
-          { id: 10, task_id: 3, start_date: "2025-04-14 00:00:00", duration: 2, end_date: "2025-04-16 00:00:00" },
-          { id: 11, task_id: 3, start_date: "2025-04-16 00:00:00", duration: 1, end_date: "2025-04-17 00:00:00" },
-          { id: 12, task_id: 8, start_date: "2025-04-02 00:00:00", duration: 4, end_date: "2025-04-06 00:00:00" },
-          { id: 13, task_id: 18, start_date: "2025-04-03 00:00:00", duration: 1, end_date: "2025-04-04 00:00:00" },
-          { id: 14, task_id: 18, start_date: "2025-04-05 00:00:00", duration: 1, end_date: "2025-04-06 00:00:00" },
-          { id: 15, task_id: 20, start_date: "2025-04-11 00:00:00", duration: 2, end_date: "2025-04-13 00:00:00" },
-          { id: 16, task_id: 21, start_date: "2025-04-16 00:00:00", duration: 1, end_date: "2025-04-17 00:00:00" },
-          { id: 17, task_id: 21, start_date: "2025-04-18 00:00:00", duration: 1, end_date: "2025-04-19 00:00:00" },
-          { id: 18, task_id: 15, start_date: "2025-04-04 00:00:00", duration: 3, end_date: "2025-04-07 00:00:00" },
-          { id: 19, task_id: 22, start_date: "2025-04-01 00:00:00", duration: 1, end_date: "2025-04-02 00:00:00" },
-          { id: 20, task_id: 22, start_date: "2025-04-03 00:00:00", duration: 1, end_date: "2025-04-04 00:00:00" },
-          { id: 21, task_id: 23, start_date: "2025-04-08 00:00:00", duration: 2, end_date: "2025-04-10 00:00:00" },
-          { id: 22, task_id: 24, start_date: "2025-04-11 00:00:00", duration: 1, end_date: "2025-04-12 00:00:00" },
-          { id: 23, task_id: 24, start_date: "2025-04-12 00:00:00", duration: 1, end_date: "2025-04-13 00:00:00" },
-          { id: 24, task_id: 24, start_date: "2025-04-13 00:00:00", duration: 1, end_date: "2025-04-14 00:00:00" },
-          { id: 25, task_id: 24, start_date: "2025-04-14 00:00:00", duration: 1, end_date: "2025-04-15 00:00:00" },
-          { id: 26, task_id: 24, start_date: "2025-04-15 00:00:00", duration: 1, end_date: "2025-04-16 00:00:00" },
-          { id: 27, task_id: 24, start_date: "2025-04-16 00:00:00", duration: 1, end_date: "2025-04-17 00:00:00" },
-          { id: 28, task_id: 24, start_date: "2025-04-17 00:00:00", duration: 1, end_date: "2025-04-18 00:00:00" },
-          { id: 29, task_id: 24, start_date: "2025-04-18 00:00:00", duration: 1, end_date: "2025-04-19 00:00:00" },
-          { id: 30, task_id: 24, start_date: "2025-04-19 00:00:00", duration: 1, end_date: "2025-04-20 00:00:00" },
-          { id: 31, task_id: 24, start_date: "2025-04-20 00:00:00", duration: 1, end_date: "2025-04-21 00:00:00" },
-          { id: 32, task_id: 24, start_date: "2025-04-21 00:00:00", duration: 1, end_date: "2025-04-22 00:00:00" },
-          { id: 33, task_id: 24, start_date: "2025-04-22 00:00:00", duration: 1, end_date: "2025-04-23 00:00:00" },
-          { id: 34, task_id: 3, start_date: "2025-04-08 00:00:00", duration: 1, end_date: "2025-04-09 00:00:00" },
-        ],
       };
 
       // 初始化
