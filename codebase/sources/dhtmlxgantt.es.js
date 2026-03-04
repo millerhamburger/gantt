@@ -21248,7 +21248,36 @@ function createTaskRenderer$2(gantt2) {
         }, cfg, controlsMargin);
       }
     }
-    return div;
+    
+    // 任务条外围再包裹一层
+    const taskWrapDiv = document.createElement("div");
+    taskWrapDiv.appendChild(div)
+    taskWrapDiv.className = "gantt_task_wrap";
+
+    // 渲染基线
+    // 这里基线的left、width、height后续需要改为动态机选
+    if(baselinesOnDifferentRow && task.baselines && task.baselines.length !== 0){
+      task.baselines.forEach((baseline, index) => {
+        const pos = view.getItemPosition(task, baseline.start_date, baseline.end_date )
+        const baselineDiv = document.createElement("div")
+        baselineDiv.className = `gantt_task_baseline gantt_task_baseline_${index}`
+        const baselineHeight = view.getItemHeight(task.id) - height - padd * 2 - 4
+        console.log("baselineHeight", view.getItemHeight(task.id), height, padd)
+        if (taskType == cfg.types.milestone) {
+          pos.left -= Math.round(baselineHeight / 2);
+          pos.width = baselineHeight;
+        }
+        var styles = ["left:" + pos.left + "px", "top:" + (padd * 2 + height + pos.top) + "px", "height:" + baselineHeight + "px", "width:" + pos.width + "px"];
+        if (taskType == cfg.types.milestone){
+          baselineDiv.className += " gantt_milestone_baseline"; 
+        }
+        baselineDiv.style.cssText = styles.join(";");
+        taskWrapDiv.appendChild(baselineDiv)
+      })
+    }
+
+
+    return taskWrapDiv;
   }
   function _render_side_content(task, template, cssClass, marginStyle) {
     if (!template) return null;
