@@ -2,7 +2,7 @@
  * @Author: YEYI millerye1995@foxmail.com
  * @Date: 2026-02-26 10:34:00
  * @LastEditors: YEYI millerye1995@foxmail.com
- * @LastEditTime: 2026-03-04 21:02:31
+ * @LastEditTime: 2026-03-05 14:11:48
  * @FilePath: \gantt\index.html
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -168,14 +168,15 @@
 
       gantt.config.highlight_critical_path = true;
 
+      gantt.templates.tooltip_date_format = gantt.date.date_to_str("%Y/%m/%d");
       gantt.attachEvent("onGanttReady", function () {
         var tooltips = gantt.ext.tooltips;
 
         gantt.templates.tooltip_text = function (start, end, task) {
           return "<b>任务名称:</b> " + task.text + "<br/>" +
-            "<b>时间范围:</b> " +
-            gantt.templates.tooltip_date_format(start) +
-            "至" + gantt.templates.tooltip_date_format(end);
+            "<b>时间范围:</b> " + gantt.templates.tooltip_date_format(start) + "-" + gantt.templates.tooltip_date_format(end) + "<br/>" +
+            "<b>工期:</b> " + task.duration + "天" + "<br/>" +
+            "<b>完成度:</b> " + Math.round(task.progress * 100) + "%"
         }
       })
 
@@ -338,6 +339,7 @@
           height: 70,
           map_to: "description",
           type: "textarea",
+          placeholder: "请输入任务描述",
         },
         { name: "基线", height: 100, type: "baselines", map_to: "baselines" },
       ];
@@ -362,6 +364,7 @@
           height: 70,
           map_to: "description",
           type: "textarea",
+          placeholder: "请输入任务描述",
         },
         { name: "基线", height: 100, type: "baselines", map_to: "baselines" },
       ];
@@ -393,6 +396,7 @@
           height: 70,
           map_to: "description",
           type: "textarea",
+          placeholder: "请输入任务描述",
         },
         { name: "基线", height: 100, type: "baselines", map_to: "baselines" },
       ];
@@ -488,9 +492,7 @@
 
       // 初始化数据
       // const data = { ... } // 注释掉旧数据
-      console.time("Generate Data");
       const data = generateData(2000);
-      console.timeEnd("Generate Data");
 
       // 初始化
       gantt.init("gantt_here");

@@ -17537,8 +17537,6 @@ const Resizer = function(_super) {
       var initialNextWidth = next.$view.offsetWidth;
       var startX = e.clientX;
 
-      console.log("Resizing", initialPrevWidth, initialNextWidth, e );
-
       function onMove(e) {
         var delta = e.clientX - startX;
         var newPrevWidth = initialPrevWidth + delta;
@@ -21261,7 +21259,8 @@ function createTaskRenderer$2(gantt2) {
         const pos = view.getItemPosition(task, baseline.start_date, baseline.end_date )
         const baselineDiv = document.createElement("div")
         baselineDiv.className = `gantt_task_baseline gantt_task_baseline_${index}`
-        const baselineHeight = view.getItemHeight(task.id) - height - padd * 2 - 4
+        // const baselineHeight = (view.getItemHeight(task.id) - height - padd * 2 - 4)
+        const baselineHeight = 8
         if (taskType == cfg.types.milestone) {
           pos.left -= Math.round(baselineHeight / 2);
           pos.width = baselineHeight;
@@ -25570,7 +25569,7 @@ function TextareaControlConstructor(gantt2) {
   TextareaControl.prototype.render = function(sns) {
     const height = (sns.height || "130") + "px";
     const placeholder = sns.placeholder ? `placeholder='${sns.placeholder}'` : "";
-    return `<div class='gantt_cal_ltext gantt_section_${sns.name}' style='height:${height};' ${placeholder}><textarea></textarea></div>`;
+    return `<div class='gantt_cal_ltext gantt_section_${sns.name}' style='height:${height};' ><textarea ${placeholder}></textarea></div>`;
   };
   TextareaControl.prototype.set_value = function(node, value) {
     gantt2.form_blocks.textarea._get_input(node).value = value || "";
