@@ -2,7 +2,7 @@
  * @Author: YEYI millerye1995@foxmail.com
  * @Date: 2026-02-26 10:34:00
  * @LastEditors: YEYI millerye1995@foxmail.com
- * @LastEditTime: 2026-03-05 15:01:48
+ * @LastEditTime: 2026-03-05 15:44:32
  * @FilePath: \gantt\index.html
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -26,29 +26,48 @@
         height: calc(100% - 50px);
       }
       .gantt_control {
-        height: 50px;
-        line-height: 50px;
-        padding: 0 20px;
-        background: #f4f7f6;
-        border-bottom: 1px solid #cecece;
+        height: 60px;
+        line-height: 60px;
+        padding: 0 24px;
+        background: #ffffff;
+        border-bottom: 1px solid #e0e0e0;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        position: relative;
+        z-index: 10;
       }
       .gantt_control button {
-        padding: 5px 15px;
+        padding: 8px 16px;
         cursor: pointer;
-        background: #fff;
-        border: 1px solid #cecece;
-        border-radius: 4px;
+        background: #ffffff;
+        border: 1px solid #d9d9d9;
+        border-radius: 6px;
+        font-size: 14px;
+        color: #333;
+        transition: all 0.3s ease;
+        outline: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
       .gantt_control button:hover {
-        background: #f0f0f0;
+        background: #f5f5f5;
+        border-color: #40a9ff;
+        color: #40a9ff;
       }
       .gantt_control button.active {
-        background: #537cfa;
+        background: #1890ff;
         color: #fff;
-        border-color: #537cfa;
+        border-color: #1890ff;
+        box-shadow: 0 2px 4px rgba(24, 144, 255, 0.3);
+      }
+      .gantt_control .separator {
+        width: 1px;
+        height: 24px;
+        background-color: #e8e8e8;
+        margin: 0 8px;
       }
     </style>
   </head>
@@ -60,14 +79,18 @@
       <button id="toggle_baseline" class="active" onclick="toggleBaseline()">
         基线
       </button>
-      <span
-        style="margin-left: 20px; border-left: 1px solid #cecece; height: 30px"
-      ></span>
+      <div class="separator"></div>
       <button id="scale_day" class="active" onclick="setScale('day')">
         日
       </button>
       <button id="scale_week" onclick="setScale('week')">周</button>
       <button id="scale_month" onclick="setScale('month')">月</button>
+      <div class="separator"></div>
+      <button id="view_grid" onclick="setViewMode('grid')">仅表格</button>
+      <button id="view_gantt" onclick="setViewMode('gantt')">仅甘特图</button>
+      <button id="view_split" class="active" onclick="setViewMode('split')">
+        表格+甘特图
+      </button>
     </div>
     <div id="gantt_here"></div>
     <script type="module">
@@ -135,6 +158,36 @@
             { unit: "year", step: 1, format: "%Y年" },
             { unit: "month", step: 1, format: "%M" },
           ];
+        }
+        gantt.render();
+      };
+
+      window.setViewMode = function (mode) {
+        // 更新按钮状态
+        const modes = ["grid", "gantt", "split"];
+        modes.forEach((m) => {
+          const btn = document.getElementById("view_" + m);
+          if (m === mode) btn.classList.add("active");
+          else btn.classList.remove("active");
+        });
+
+        if (mode === "grid") {
+            // 仅表格模式
+            gantt.config.show_grid = true;
+            gantt.config.show_chart = false;
+            // 确保表格宽度占满，或者足够大
+            gantt.config.grid_width = document.documentElement.clientWidth - 20; 
+        } else if (mode === "gantt") {
+            // 仅甘特图模式
+            gantt.config.show_grid = false;
+            gantt.config.show_chart = true;
+        } else {
+            // 表格+甘特图模式 (split)
+            gantt.config.show_grid = true;
+            gantt.config.show_chart = true;
+            const docWidth = document.documentElement.clientWidth;
+            const gridWidth = docWidth / 2;
+            gantt.config.grid_width = gridWidth > 1000 ? gridWidth : 1000;
         }
         gantt.render();
       };
