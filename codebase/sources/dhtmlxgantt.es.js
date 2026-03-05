@@ -14981,31 +14981,35 @@ https://docs.dhtmlx.com/gantt/faq.html#theganttchartisntrenderedcorrectly`);
     return false;
   };
   // 是否关键任务
+  // 关键路径计算算法（使用拓扑排序和关键路径法 CPM）
   gantt2.isCriticalTask = function (task) {
     if (!this.config.highlight_critical_path) return false;
 
     // 缓存计算结果，避免重复计算
-    // if (this._criticalPathCache && this._criticalPathCache[task.id] !== undefined) {
-    //   return this._criticalPathCache[task.id];
-    // }
+    if (this._criticalPathCache && this._criticalPathCache[task.id] !== undefined) {
+      return this._criticalPathCache[task.id];
+    }
 
     // 1. 获取所有任务和链接
     var tasks = this.getTaskByTime();
     var links = this.getLinks();
 
     // 2. 构建图结构 (邻接表)
-    var adj = {}; //后继
-    var rev_adj = {}; //前驱
+    var adj = {}; // 后继节点 adjacency list
+    var rev_adj = {}; // 前驱节点 reverse adjacency list
     var taskMap = {};
     var durationMap = {};
 
+    // 初始化数据结构
     tasks.forEach(function (t) {
       taskMap[t.id] = t;
-      durationMap[t.id] = t.duration;
+      // 注意：这里使用工期作为权重，单位需要统一，这里简化为数值
+      durationMap[t.id] = t.duration || 0;
       adj[t.id] = [];
       rev_adj[t.id] = [];
     });
 
+    // 填充邻接表
     links.forEach(function (l) {
       if (taskMap[l.source] && taskMap[l.target]) {
         adj[l.source].push(l.target);
@@ -15013,62 +15017,82 @@ https://docs.dhtmlx.com/gantt/faq.html#theganttchartisntrenderedcorrectly`);
       }
     });
 
-    // 3. 计算最早开始时间 (ES) - Forward Pass
+    // 3. 计算最早开始时间 (ES) 和 最早完成时间 (EF) - Forward Pass
     var es = {};
     var ef = {};
     var maxEF = 0; // 项目总工期
 
-    // 拓扑排序 (简化版：直接多次迭代或假定ID顺序，这里用简单的迭代松弛)
+    // 计算入度，用于拓扑排序
     var inDegree = {};
     var queue = [];
 
+    // 初始化 ES 为 -Infinity 以处理多个起始点
     tasks.forEach(function (t) {
       inDegree[t.id] = rev_adj[t.id].length;
+      es[t.id] = 0; 
+      // 注意：这里我们假设所有任务都相对项目开始时间(0)开始
+      // 实际上，没有前驱的任务 ES 应该基于其自身约束或项目开始
+      
+      ef[t.id] = durationMap[t.id];
+
       if (inDegree[t.id] === 0) {
         queue.push(t.id);
-        es[t.id] = 0; // 相对时间 0
-        ef[t.id] = durationMap[t.id];
+        // 更新 maxEF
         if (ef[t.id] > maxEF) maxEF = ef[t.id];
       }
     });
 
-    var sortedOrder = [];
+    var sortedOrder = []; // 拓扑排序结果
     var head = 0;
+    
+    // 拓扑排序主循环
     while (head < queue.length) {
       var u = queue[head++];
       sortedOrder.push(u);
 
-      if (ef[u] > maxEF) maxEF = ef[u];
-
+      // 遍历后继节点
       adj[u].forEach(function (v) {
         inDegree[v]--;
         if (inDegree[v] === 0) {
           queue.push(v);
         }
-        // 松弛操作
+        
+        // 松弛操作 (Relaxation)
         // ES[v] = max(ES[v], EF[u])
-        if (es[v] === undefined || ef[u] > es[v]) {
+        // EF[v] = ES[v] + duration[v]
+        if (ef[u] > es[v]) {
           es[v] = ef[u];
           ef[v] = es[v] + durationMap[v];
         }
       });
+      
+      // 在每次松弛后，或者在处理完所有节点后，我们需要确认 maxEF
+      // 因为可能存在多个汇点（没有后继的任务）
+      // 实际上，maxEF 应该是所有任务中 EF 的最大值
+      if (ef[u] > maxEF) maxEF = ef[u];
     }
-
-    // 4. 计算最晚开始时间 (LS) - Backward Pass
+    
+    // 4. 计算最晚开始时间 (LS) 和 最晚完成时间 (LF) - Backward Pass
     var lf = {};
     var ls = {};
 
-    // 初始化 LF 为项目总工期
+    // 初始化 LF 为项目总工期 (关键修正：所有汇点的 LF 都应设为 maxEF)
+    // 实际上，标准 CPM 中，只有真正的汇点（没有后继的任务）LF = maxEF
+    // 或者，所有任务的默认 LF = maxEF，然后被后继约束更新
     tasks.forEach(function (t) {
       lf[t.id] = maxEF;
       ls[t.id] = lf[t.id] - durationMap[t.id];
     });
 
-    // 逆向遍历
+    // 逆向遍历拓扑序列
     for (var i = sortedOrder.length - 1; i >= 0; i--) {
       var u = sortedOrder[i];
+      
+      // 遍历后继节点来更新当前节点的 LF
+      // LF[u] = min(LS[v]) for all v in adj[u]
+      // 如果没有后继节点，LF[u] 保持为 maxEF (这是正确的，因为它是某条路径的终点)
+      
       adj[u].forEach(function (v) {
-        // LF[u] = min(LF[u], LS[v])
         if (ls[v] < lf[u]) {
           lf[u] = ls[v];
           ls[u] = lf[u] - durationMap[u];
@@ -15076,34 +15100,54 @@ https://docs.dhtmlx.com/gantt/faq.html#theganttchartisntrenderedcorrectly`);
       });
     }
 
-    // 5. 计算总时差 (Total Slack)
-    // Slack = LS - ES
+    // 5. 计算总时差 (Total Slack) 并缓存结果
+    // Slack = LS - ES (或 LF - EF)
     // 如果 Slack = 0，则是关键路径
     this._criticalPathCache = this._criticalPathCache || {};
     var self = this;
+    
+    // 设置阈值，处理浮点数精度问题
+    var epsilon = 1e-5;
+    
     tasks.forEach(function (t) {
       var slack = ls[t.id] - es[t.id];
-      // 考虑浮点数误差
-      self._criticalPathCache[t.id] = Math.abs(slack) < 1e-5;
+      // 只有未完成的任务才计算关键路径（可选优化）
+      // 这里对所有任务计算
+      self._criticalPathCache[t.id] = Math.abs(slack) < epsilon;
     });
 
     return this._criticalPathCache[task.id];
   };
 
   // 清除缓存的钩子
-  // 注意：在 extend 函数内部，我们可能无法直接调用 attachEvent，除非 gantt2 已经有了这个方法
-  // 假设 extend(gantt2) 是在 Gantt 初始化之后调用的，或者 gantt2 原型上有 attachEvent
-  // 查看上下文，gantt2 应该是一个 Gantt 实例或者原型
-  // if (gantt2.attachEvent) {
-  //     gantt2.attachEvent("onAfterTaskUpdate", function(){ this._criticalPathCache = null; });
-  //     gantt2.attachEvent("onAfterLinkAdd", function(){ this._criticalPathCache = null; });
-  //     gantt2.attachEvent("onAfterLinkDelete", function(){ this._criticalPathCache = null; });
-  //     gantt2.attachEvent("onParse", function(){ this._criticalPathCache = null; });
-  // }
-  
+  if (gantt2.attachEvent) {
+      gantt2.attachEvent("onAfterTaskUpdate", function(){ this._criticalPathCache = null; });
+      gantt2.attachEvent("onAfterLinkAdd", function(){ this._criticalPathCache = null; });
+      gantt2.attachEvent("onAfterLinkDelete", function(){ this._criticalPathCache = null; });
+      gantt2.attachEvent("onParse", function(){ this._criticalPathCache = null; });
+      gantt2.attachEvent("onClear", function(){ this._criticalPathCache = null; });
+  }
 
+  gantt2.isCriticalLink = function (link) {
+    // 关键路径逻辑依赖于关键任务
+    // 只有当链接连接的两个任务都是关键任务时，该链接才被视为关键链接
+    if (!this.isCriticalTask) return false;
+    
+    // 如果高亮关键路径未开启，则返回false
+    if (!this.config.highlight_critical_path) return false;
 
+    var source = this.getTask(link.source);
+    var target = this.getTask(link.target);
 
+    if (!source || !target) return false;
+
+    // 两个任务都必须是关键任务
+    if (this.isCriticalTask(source) && this.isCriticalTask(target)) {
+        return true;
+    }
+    
+    return false;
+  };
 }
 function extend(gantt2) {
   gantt2.destructor = function() {
