@@ -17516,7 +17516,8 @@ const Resizer = function(_super) {
     return _this;
   }
   Resizer.prototype.$toHTML = function() {
-    return "<div class='gantt_layout_cell gantt_resizer' data-cell-id='" + this.$id + "' style='padding-top:0px;'></div>";
+    const type = this._isHorizontal() ? "y" : "x";
+    return `<div class='gantt_layout_cell gantt_resizer gantt_resizer_${type}' data-cell-id='${this.$id}' style='padding-top:0px;'><div class='gantt_layout_content gantt_resizer_${type} gantt_grid_resize_wrap'></div></div>`;
   };
   Resizer.prototype.$fill = function(node, parent) {
     _super.prototype.$fill.call(this, node, parent);
@@ -18259,11 +18260,11 @@ Timeline.prototype = { init: function(container) {
   const taskConstraints = "<div class='gantt_task_constraints'></div>";
   const taskDeadlines = "<div class='gantt_task_deadlines'></div>";
   const taskBaselines = "<div class='gantt_task_baselines'></div>";
-  this.$task_data.innerHTML = taskBg + taskBaselines + links + taskBars + taskConstraints + taskDeadlines;
+  this.$task_data.innerHTML = taskBg + taskBaselines + taskBars + links + taskConstraints + taskDeadlines;
   this.$task_bg = this.$task_data.childNodes[0];
   this.$task_baselines = this.$task_data.childNodes[1];
-  this.$task_links = this.$task_data.childNodes[2];
-  this.$task_bars = this.$task_data.childNodes[3];
+  this.$task_links = this.$task_data.childNodes[3];
+  this.$task_bars = this.$task_data.childNodes[2];
   this.$task_constraints = this.$task_data.childNodes[4];
   this.$task_deadlines = this.$task_data.childNodes[5];
   this._tasks = { col_width: 0, width: [], full_width: 0, trace_x: [], rendered: {} };

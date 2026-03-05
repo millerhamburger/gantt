@@ -2,7 +2,7 @@
  * @Author: YEYI millerye1995@foxmail.com
  * @Date: 2026-02-26 10:34:00
  * @LastEditors: YEYI millerye1995@foxmail.com
- * @LastEditTime: 2026-03-04 13:40:29
+ * @LastEditTime: 2026-03-04 21:02:31
  * @FilePath: \gantt\index.html
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -145,7 +145,7 @@
 
       // 配置甘特图
       // gantt.config.date_format = "%Y-%m-%d %H:%i";
-      gantt.config.date_format = "%Y-%m-%d %H:%i:%s";
+      // gantt.config.date_format = "%Y-%m-%d %H:%i:%s";
 
       gantt.config.grid_width = gridWidth > 1000 ? gridWidth : 1000;
 
@@ -163,9 +163,21 @@
 
       gantt.plugins({
         /*!*/ critical_path: true /*!*/,
+        tooltip: true
       }); /*!*/
 
       gantt.config.highlight_critical_path = true;
+
+      gantt.attachEvent("onGanttReady", function () {
+        var tooltips = gantt.ext.tooltips;
+
+        gantt.templates.tooltip_text = function (start, end, task) {
+          return "<b>任务名称:</b> " + task.text + "<br/>" +
+            "<b>时间范围:</b> " +
+            gantt.templates.tooltip_date_format(start) +
+            "至" + gantt.templates.tooltip_date_format(end);
+        }
+      })
 
       gantt.config.columns = [
         { name: "text", label: "任务名称", width: "*", tree: true },
@@ -354,8 +366,6 @@
         { name: "基线", height: 100, type: "baselines", map_to: "baselines" },
       ];
 
-      console.log(gantt.config.lightbox.milestone_sections, 1111);
-
       gantt.config.lightbox.milestone_sections = [
         {
           name: "任务名称",
@@ -391,216 +401,96 @@
       gantt.i18n.addLocale("cn", locale);
       gantt.i18n.setLocale("cn");
 
-      // 初始化数据
-      const data = {
-        data: [
-          {
+      // 模拟大规模数据
+      function generateData(count) {
+        var tasks = {
+          data: [],
+          links: [],
+          baselines: [] // 也生成一些基线数据
+        };
+
+        var start = new Date(2024, 6, 1);
+        
+        // 创建一个根项目
+        tasks.data.push({
             id: 1,
-            start_date: "2025-04-04 00:00:00",
-            duration: 12,
-            text: "Project #1",
-            progress: 0.1,
-            parent: 0,
-            open: true,
+            text: "Project Root",
+            start_date: start,
             type: "project",
-            end_date: "2025-04-16 00:00:00",
-          },
-          {
-            id: 2,
-            start_date: "2025-04-04 00:00:00",
-            duration: 2,
-            text: "Task #1",
-            progress: 0.5,
-            parent: 1,
-            open: true,
-            end_date: "2025-04-06 00:00:00",
-          },
-          {
-            id: 5,
-            start_date: "2025-04-05 00:00:00",
-            duration: 3,
-            text: "Task #1.1",
-            progress: 0.34,
-            parent: 2,
-            open: true,
-            end_date: "2025-04-08 00:00:00",
-          },
-          {
-            id: 6,
-            start_date: "2025-04-09 00:00:00",
-            duration: 4,
-            text: "Task #1.2",
-            progress: 0.5,
-            parent: 2,
-            open: true,
-            end_date: "2025-04-13 00:00:00",
-          },
-          {
-            id: 3,
-            start_date: "2025-04-06 00:00:00",
-            duration: 0,
-            text: "Task #2",
-            progress: 0.7,
-            parent: 1,
-            open: true,
-            end_date: "2025-04-06 00:00:00",
-            type: "milestone",
-          },
-          {
-            id: 7,
-            start_date: "2025-04-11 00:00:00",
-            duration: 5,
-            text: "Task #2.1",
-            progress: 0.2,
-            parent: 3,
-            open: true,
-            end_date: "2025-04-16 00:00:00",
-          },
-          {
-            id: 8,
-            start_date: "2025-04-05 00:00:00",
-            duration: 4,
-            text: "Task #2.2",
-            progress: 0.9,
-            parent: 3,
-            open: true,
-            end_date: "2025-04-09 00:00:00",
-          },
-          {
-            id: 12,
-            start_date: "2025-04-02 00:00:00",
-            duration: 16,
-            text: "Project #2",
-            progress: 0,
-            parent: 0,
-            open: true,
-            type: "project",
-            end_date: "2025-04-18 00:00:00",
-          },
-          {
-            id: 13,
-            start_date: "2025-04-02 00:00:00",
-            duration: 10,
-            text: "Task #1",
-            progress: 0.2,
-            parent: 12,
-            open: true,
-            end_date: "2025-04-12 00:00:00",
-          },
-          {
-            id: 14,
-            start_date: "2025-04-03 00:00:00",
-            duration: 2,
-            text: "Task #2",
-            progress: 0.9,
-            parent: 12,
-            render: "split",
-            end_date: "2025-04-05 00:00:00",
-          },
-          {
-            id: 18,
-            start_date: "2025-04-06 00:00:00",
-            duration: 1,
-            text: "Task #2.1",
-            progress: 0.3,
-            parent: 14,
-            open: true,
-            end_date: "2025-04-07 00:00:00",
-          },
-          {
-            id: 19,
-            start_date: "2025-04-09 00:00:00",
-            duration: 2,
-            text: "Task #2.2",
-            progress: 0.6,
-            parent: 14,
-            open: true,
-            end_date: "2025-04-11 00:00:00",
-          },
-          {
-            id: 20,
-            start_date: "2025-04-12 00:00:00",
-            duration: 2,
-            text: "Task #2.3",
-            progress: 0.5,
-            parent: 14,
-            open: true,
-            end_date: "2025-04-14 00:00:00",
-          },
-          {
-            id: 21,
-            start_date: "2025-04-17 00:00:00",
-            duration: 1,
-            text: "Task #2.4",
-            progress: 0.7,
-            parent: 14,
-            open: true,
-            end_date: "2025-04-18 00:00:00",
-          },
-          {
-            id: 15,
-            start_date: "2025-04-05 00:00:00",
-            duration: 3,
-            text: "Task #3",
-            progress: 0.6,
-            parent: 12,
-            open: true,
-            end_date: "2025-04-08 00:00:00",
-          },
-          {
-            id: 16,
-            start_date: "2025-04-04 00:00:00",
-            duration: 1,
-            text: "Task #4",
-            progress: 0.2,
-            parent: 12,
-            render: "split",
-            end_date: "2025-04-05 00:00:00",
-          },
-          {
-            id: 22,
-            start_date: "2025-04-06 00:00:00",
-            duration: 1,
-            text: "Task #4.1",
-            progress: 1,
-            parent: 16,
-            open: true,
-            end_date: "2025-04-07 00:00:00",
-          },
-          {
-            id: 23,
-            start_date: "2025-04-08 00:00:00",
-            duration: 2,
-            text: "Task #4.2",
-            progress: 1,
-            parent: 16,
-            open: true,
-            end_date: "2025-04-10 00:00:00",
-          },
-          {
-            id: 24,
-            start_date: "2025-04-13 00:00:00",
-            duration: 0,
-            text: "Task #4.3",
-            progress: 0,
-            parent: 16,
-            open: true,
-            type: "milestone",
-            end_date: "2025-04-13 00:00:00",
-          },
-          {
-            id: 17,
-            start_date: "2025-04-16 00:00:00",
-            duration: 2,
-            text: "Task #5",
-            progress: 0.5,
-            parent: 12,
-            open: true,
-            end_date: "2025-04-18 00:00:00",
-          },
-        ],
-        links: [],
-      };
+            open: true
+        });
+
+        for (var i = 1; i < count; i++) {
+          var date = new Date(start);
+          date.setDate(start.getDate() + (i % 60)); // 分散在两个月内
+          
+          var duration = Math.floor(Math.random() * 10) + 1;
+          var parent = 1;
+          
+          // 每50个任务创建一个子项目节点，构建层级
+          if (i % 50 === 0) {
+              tasks.data.push({
+                  id: i + 1,
+                  text: "Sub Project " + i,
+                  start_date: date,
+                  type: "project",
+                  open: true, // 默认折叠以提高初始加载感知性能
+                  parent: 1
+              });
+          } else {
+              // 寻找最近的子项目作为父节点
+              var parentId = Math.floor(i / 50) * 50 + 1;
+              if (parentId === 1) parentId = 1; // 前49个挂在根节点
+
+              var task = {
+                id: i + 1,
+                text: "Task " + i,
+                start_date: date,
+                duration: duration,
+                progress: Math.random(),
+                parent: parentId
+              };
+              
+              // 随机添加一些里程碑
+              if (i % 20 === 0) {
+                  task.type = "milestone";
+                  task.duration = 0;
+                  task.text = "Milestone " + i;
+              }
+
+              tasks.data.push(task);
+
+              // 随机生成链接
+              if (i > 2 && Math.random() > 0.6) {
+                  tasks.links.push({
+                      id: tasks.links.length + 1,
+                      source: i, // 链接到前一个任务
+                      target: i + 1,
+                      type: "0" // finish_to_start
+                  });
+              }
+
+              // 随机生成基线
+              if (i % 3 === 0) {
+                  var baselineStart = new Date(date);
+                  baselineStart.setDate(date.getDate() - 2); // 基线比计划早两天
+                  tasks.baselines.push({
+                      task_id: i + 1,
+                      start_date: baselineStart,
+                      duration: duration + 4, // 基线工期稍长
+                      end_date: new Date(baselineStart.getTime() + (duration + 4) * 24 * 60 * 60 * 1000)
+                  });
+              }
+          }
+        }
+        return tasks;
+      }
+
+      // 初始化数据
+      // const data = { ... } // 注释掉旧数据
+      console.time("Generate Data");
+      const data = generateData(2000);
+      console.timeEnd("Generate Data");
 
       // 初始化
       gantt.init("gantt_here");
