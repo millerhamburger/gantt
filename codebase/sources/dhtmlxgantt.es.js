@@ -11235,7 +11235,7 @@ function empty_state_screen(gantt2) {
       const domHelpers2 = gantt2.utils.dom;
       const gridPlaceholder = domHelpers2.closest(e.target, "[data-empty-state-create-task]");
       if (gridPlaceholder) {
-        gantt2.createTask({ id: gantt2.uid(), text: "New Task" });
+        gantt2.createTask({ id: gantt2.uid(), text: "新任务" });
       }
     });
     this.clickEvents.push(id);
@@ -26207,7 +26207,7 @@ function BaselineControlConstructor(gantt2) {
     return baselineSection;
   };
   DurationControl.prototype.set_value = function(node, value, task, config2) {
-    if (task.baselines) {
+    if (task.baselines && task.baselines.length !== 0 ) {
       node.innerHTML = "";
       task.baselines.forEach((baseline) => {
         _generateBaselineRow(node, baseline, task, config2);

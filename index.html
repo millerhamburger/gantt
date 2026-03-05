@@ -2,7 +2,7 @@
  * @Author: YEYI millerye1995@foxmail.com
  * @Date: 2026-02-26 10:34:00
  * @LastEditors: YEYI millerye1995@foxmail.com
- * @LastEditTime: 2026-03-05 14:11:48
+ * @LastEditTime: 2026-03-05 14:30:09
  * @FilePath: \gantt\index.html
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -160,6 +160,9 @@
       gantt.config.open_split_tasks = true;
 
       gantt.config.baselines.render_mode = "separateRow";
+
+      // 显示空状态
+      gantt.config.show_empty_state = true;
 
       gantt.plugins({
         /*!*/ critical_path: true /*!*/,

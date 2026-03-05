@@ -90,8 +90,8 @@ export const locale = {
     resources_filter_label: "hide empty",
     resources_section_placeholder:
       "Nothing assigned yet. Click 'Add Assignment' to assign resources.",
-    empty_state_text_link: "Click here",
-    empty_state_text_description: "to create your first task",
+    empty_state_text_link: "新增任务",
+    empty_state_text_description: "轻触按键你的第一个任务",
     baselines_section_placeholder: "请增加一个新的基线",
     baselines_add_button: "增加基线",
     baselines_remove_button: "删除基线",
