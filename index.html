@@ -2,7 +2,7 @@
  * @Author: YEYI millerye1995@foxmail.com
  * @Date: 2026-02-26 10:34:00
  * @LastEditors: YEYI millerye1995@foxmail.com
- * @LastEditTime: 2026-03-05 15:46:58
+ * @LastEditTime: 2026-03-06 11:27:50
  * @FilePath: \gantt\index.html
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -198,7 +198,7 @@
 
       // 配置甘特图
       // gantt.config.date_format = "%Y-%m-%d %H:%i";
-      // gantt.config.date_format = "%Y-%m-%d %H:%i:%s";
+      gantt.config.date_format = "%Y-%m-%d %H:%i:%s";
 
       gantt.config.grid_width = gridWidth > 1000 ? gridWidth : 1000;
 
@@ -552,46 +552,208 @@
 
       // 初始化
       gantt.init("gantt_here");
-      gantt.parse({
-        data: [
-          {id: 1, text: "Office itinerancy", open: true, type: "project"},
-          {id: 2, text: "Office facing", start_date: "22-07-2024", duration: "20", parent: "1"},
-          {id: 3, text: "Furniture installation", start_date: "22-07-2024", duration: "5", parent: "1"},
-          {id: 4, text: "The employee relocation", start_date: "29-07-2024", duration: "15", parent: "1"},
-          {id: 5, text: "Interior office", start_date: "29-07-2024", duration: "15", parent: "1"},
-          {id: 6, text: "Air conditioners installation", start_date: "19-08-2024", duration: "2", parent: "1"},
-          {id: 7, text: "Workplaces preparation", start_date: "21-08-2024", duration: "2", parent: "1"},
-          {id: 8, text: "Preparing workplaces for us", start_date: "22-07-2024", duration: "10", parent: "1"},
-          {id: 9, text: "Workplaces importation", start_date: "23-08-2024", duration: "1", parent: "1"},
-          {id: 10, text: "Analysis", open: true, type: "project"},
-          {id: 11, text: "Documentation creation", start_date: "26-08-2024", duration: "14", parent: "10"},
-          {id: 12, text: "Software design", start_date: "26-08-2024", duration: "10", parent: "10"},
-          {id: 13, text: "Interface setup", start_date: "13-09-2024", duration: "1", parent: "10"},
-          {id: 14, text: "Development", open: true, type: "project"},
-          {id: 15, text: "Develop System", start_date: "16-09-2024", duration: "5", parent: "14"},
-          {id: 16, text: "Integrate System", start_date: "16-09-2024", duration: "15", parent: "14"},
-          {id: 17, text: "Test", start_date: "07-10-2024", duration: "1", parent: "14"}
-        ],
-        links: [
-          {id: "1", source: "3", target: "4", type: "0"},
-          {id: "2", source: "3", target: "5", type: "0"},
-          {id: "3", source: "2", target: "6", type: "0"},
-          {id: "4", source: "4", target: "6", type: "0"},
-          {id: "5", source: "5", target: "6", type: "0"},
-          {id: "6", source: "6", target: "7", type: "0"},
-          {id: "7", source: "7", target: "9", type: "0"},
-          {id: "8", source: "8", target: "9", type: "0"},
-          {id: "9", source: "9", target: "10", type: "0"},
-          {id: "10", source: "9", target: "11", type: "0"},
-          {id: "11", source: "9", target: "12", type: "0"},
-          {id: "12", source: "11", target: "13", type: "0"},
-          {id: "13", source: "12", target: "13", type: "0"},
-          {id: "14", source: "13", target: "14", type: "0"},
-          {id: "15", source: "13", target: "15", type: "0"},
-          {id: "16", source: "15", target: "17", type: "0"},
-          {id: "17", source: "16", target: "17", type: "0"}
-        ]
-      });
+      gantt.parse(
+        {
+          data: [
+            {
+              id: 1,
+              start_date: "2025-04-04 00:00:00",
+              duration: 12,
+              text: "Project #1",
+              progress: 0.1,
+              parent: 0,
+              open: true,
+              type: "project",
+              end_date: "2025-04-16 00:00:00",
+            },
+            {
+              id: 2,
+              start_date: "2025-04-04 00:00:00",
+              duration: 2,
+              text: "Task #1",
+              progress: 0.5,
+              parent: 1,
+              open: true,
+              end_date: "2025-04-06 00:00:00"
+            },
+            {
+              id: 5,
+              start_date: "2025-04-05 00:00:00",
+              duration: 3,
+              text: "Task #1.1",
+              progress: 0.34,
+              parent: 2,
+              open: true,
+              end_date: "2025-04-08 00:00:00"
+            },
+            { id: 6, start_date: "2025-04-09 00:00:00", duration: 4, text: "Task #1.2", progress: 0.5, parent: 2, open: true, end_date: "2025-04-13 00:00:00" },
+            {
+              id: 3,
+              start_date: "2025-04-06 00:00:00",
+              duration: 0,
+              text: "Task #2",
+              progress: 0.7,
+              parent: 1,
+              open: true,
+              end_date: "2025-04-06 00:00:00",
+              type: "milestone"
+            },
+            { id: 7, start_date: "2025-04-11 00:00:00", duration: 5, text: "Task #2.1", progress: 0.2, parent: 3, open: true, end_date: "2025-04-16 00:00:00" },
+            {
+              id: 8,
+              start_date: "2025-04-05 00:00:00",
+              duration: 4,
+              text: "Task #2.2",
+              progress: 0.9,
+              parent: 3,
+              open: true,
+              end_date: "2025-04-09 00:00:00"
+            },
+            {
+              id: 12,
+              start_date: "2025-04-02 00:00:00",
+              duration: 16,
+              text: "Project #2",
+              progress: 0,
+              parent: 0,
+              open: true,
+              type: "project",
+              end_date: "2025-04-18 00:00:00",
+            },
+            { id: 13, start_date: "2025-04-02 00:00:00", duration: 10, text: "Task #1", progress: 0.2, parent: 12, open: true, end_date: "2025-04-12 00:00:00" },
+            {
+              id: 14,
+              start_date: "2025-04-03 00:00:00",
+              duration: 2,
+              text: "Task #2",
+              progress: 0.9,
+              parent: 12,
+              render: "split",
+              end_date: "2025-04-05 00:00:00"
+            },
+            {
+              id: 18,
+              start_date: "2025-04-06 00:00:00",
+              duration: 1,
+              text: "Task #2.1",
+              progress: 0.3,
+              parent: 14,
+              open: true,
+              end_date: "2025-04-07 00:00:00"
+            },
+            { id: 19, start_date: "2025-04-09 00:00:00", duration: 2, text: "Task #2.2", progress: 0.6, parent: 14, open: true, end_date: "2025-04-11 00:00:00" },
+            {
+              id: 20,
+              start_date: "2025-04-12 00:00:00",
+              duration: 2,
+              text: "Task #2.3",
+              progress: 0.5,
+              parent: 14,
+              open: true,
+              end_date: "2025-04-14 00:00:00"
+            },
+            {
+              id: 21,
+              start_date: "2025-04-17 00:00:00",
+              duration: 1,
+              text: "Task #2.4",
+              progress: 0.7,
+              parent: 14,
+              open: true,
+              end_date: "2025-04-18 00:00:00"
+            },
+            {
+              id: 15,
+              start_date: "2025-04-05 00:00:00",
+              duration: 3,
+              text: "Task #3",
+              progress: 0.6,
+              parent: 12,
+              open: true,
+              end_date: "2025-04-08 00:00:00"
+            },
+            {
+              id: 16,
+              start_date: "2025-04-04 00:00:00",
+              duration: 1,
+              text: "Task #4",
+              progress: 0.2,
+              parent: 12,
+              render: "split",
+              end_date: "2025-04-05 00:00:00"
+            },
+            {
+              id: 22,
+              start_date: "2025-04-06 00:00:00",
+              duration: 1,
+              text: "Task #4.1",
+              progress: 1,
+              parent: 16,
+              open: true,
+              end_date: "2025-04-07 00:00:00"
+            },
+            {
+              id: 23,
+              start_date: "2025-04-08 00:00:00",
+              duration: 2,
+              text: "Task #4.2",
+              progress: 1,
+              parent: 16,
+              open: true,
+              end_date: "2025-04-10 00:00:00"
+            },
+            {
+              id: 24,
+              start_date: "2025-04-13 00:00:00",
+              duration: 0,
+              text: "Task #4.3",
+              progress: 0,
+              parent: 16,
+              open: true,
+              type: "milestone",
+              end_date: "2025-04-13 00:00:00"
+            },
+            { id: 17, start_date: "2025-04-16 00:00:00", duration: 2, text: "Task #5", progress: 0.5, parent: 12, open: true, end_date: "2025-04-18 00:00:00" },
+          ],
+          links: [],
+          baselines: [
+            { id: 1, task_id: 1, start_date: "2025-04-06 00:00:00", duration: 3, end_date: "2025-04-09 00:00:00" },
+            { id: 2, task_id: 1, start_date: "2025-04-03 00:00:00", duration: 2, end_date: "2025-04-05 00:00:00" },
+            { id: 3, task_id: 1, start_date: "2025-04-06 00:00:00", duration: 2, end_date: "2025-04-08 00:00:00" },
+            { id: 4, task_id: 2, start_date: "2025-04-06 00:00:00", duration: 1, end_date: "2025-04-10 00:00:00" },
+            { id: 5, task_id: 2, start_date: "2025-04-11 00:00:00", duration: 1, end_date: "2025-04-12 00:00:00" },
+            { id: 6, task_id: 2, start_date: "2025-04-13 00:00:00", duration: 1, end_date: "2025-04-14 00:00:00" },
+            { id: 7, task_id: 2, start_date: "2025-04-15 00:00:00", duration: 3, end_date: "2025-04-18 00:00:00" },
+            { id: 8, task_id: 2, start_date: "2025-04-19 00:00:00", duration: 1, end_date: "2025-04-20 00:00:00" },
+            { id: 9, task_id: 3, start_date: "2025-04-10 00:00:00", duration: 3, end_date: "2025-04-13 00:00:00" },
+            { id: 10, task_id: 3, start_date: "2025-04-14 00:00:00", duration: 2, end_date: "2025-04-16 00:00:00" },
+            { id: 11, task_id: 3, start_date: "2025-04-16 00:00:00", duration: 1, end_date: "2025-04-17 00:00:00" },
+            { id: 12, task_id: 8, start_date: "2025-04-02 00:00:00", duration: 4, end_date: "2025-04-06 00:00:00" },
+            { id: 13, task_id: 18, start_date: "2025-04-03 00:00:00", duration: 1, end_date: "2025-04-04 00:00:00" },
+            { id: 14, task_id: 18, start_date: "2025-04-05 00:00:00", duration: 1, end_date: "2025-04-06 00:00:00" },
+            { id: 15, task_id: 20, start_date: "2025-04-11 00:00:00", duration: 2, end_date: "2025-04-13 00:00:00" },
+            { id: 16, task_id: 21, start_date: "2025-04-16 00:00:00", duration: 1, end_date: "2025-04-17 00:00:00" },
+            { id: 17, task_id: 21, start_date: "2025-04-18 00:00:00", duration: 1, end_date: "2025-04-19 00:00:00" },
+            { id: 18, task_id: 15, start_date: "2025-04-04 00:00:00", duration: 3, end_date: "2025-04-07 00:00:00" },
+            { id: 19, task_id: 22, start_date: "2025-04-01 00:00:00", duration: 1, end_date: "2025-04-02 00:00:00" },
+            { id: 20, task_id: 22, start_date: "2025-04-03 00:00:00", duration: 1, end_date: "2025-04-04 00:00:00" },
+            { id: 21, task_id: 23, start_date: "2025-04-08 00:00:00", duration: 2, end_date: "2025-04-10 00:00:00" },
+            { id: 22, task_id: 24, start_date: "2025-04-11 00:00:00", duration: 1, end_date: "2025-04-12 00:00:00" },
+            { id: 23, task_id: 24, start_date: "2025-04-12 00:00:00", duration: 1, end_date: "2025-04-13 00:00:00" },
+            { id: 24, task_id: 24, start_date: "2025-04-13 00:00:00", duration: 1, end_date: "2025-04-14 00:00:00" },
+            { id: 25, task_id: 24, start_date: "2025-04-14 00:00:00", duration: 1, end_date: "2025-04-15 00:00:00" },
+            { id: 26, task_id: 24, start_date: "2025-04-15 00:00:00", duration: 1, end_date: "2025-04-16 00:00:00" },
+            { id: 27, task_id: 24, start_date: "2025-04-16 00:00:00", duration: 1, end_date: "2025-04-17 00:00:00" },
+            { id: 28, task_id: 24, start_date: "2025-04-17 00:00:00", duration: 1, end_date: "2025-04-18 00:00:00" },
+            { id: 29, task_id: 24, start_date: "2025-04-18 00:00:00", duration: 1, end_date: "2025-04-19 00:00:00" },
+            { id: 30, task_id: 24, start_date: "2025-04-19 00:00:00", duration: 1, end_date: "2025-04-20 00:00:00" },
+            { id: 31, task_id: 24, start_date: "2025-04-20 00:00:00", duration: 1, end_date: "2025-04-21 00:00:00" },
+            { id: 32, task_id: 24, start_date: "2025-04-21 00:00:00", duration: 1, end_date: "2025-04-22 00:00:00" },
+            { id: 33, task_id: 24, start_date: "2025-04-22 00:00:00", duration: 1, end_date: "2025-04-23 00:00:00" },
+            { id: 34, task_id: 3, start_date: "2025-04-08 00:00:00", duration: 1, end_date: "2025-04-09 00:00:00" },
+          ],
+        }
+      );
 
       console.log("Gantt initialized with version:", gantt.version);
     </script>

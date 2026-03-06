@@ -18277,6 +18277,7 @@ function createLayerConfig() {
   this.$gantt;
   var taskLayers2 = [{ expose: true, renderer: this.$gantt.$ui.layers.taskBar(), container: this.$task_bars, filter: [taskFilter, barVisible] }];
   taskLayers2.push({ renderer: this.$gantt.$ui.layers.taskBg(), container: this.$task_bg, filter: [taskFilter] });
+  taskLayers2.push({ renderer: this.$gantt.$ui.layers.taskBaselines(), container: this.$task_baselines, filter: [taskFilter] });
   var linkLayers = [{ expose: true, renderer: this.$gantt.$ui.layers.link(), container: this.$task_links, filter: [taskFilter] }];
   return { tasks: taskLayers2, links: linkLayers };
 }
@@ -18302,11 +18303,11 @@ Timeline.prototype = { init: function(container) {
   const taskConstraints = "<div class='gantt_task_constraints'></div>";
   const taskDeadlines = "<div class='gantt_task_deadlines'></div>";
   const taskBaselines = "<div class='gantt_task_baselines'></div>";
-  this.$task_data.innerHTML = taskBg + taskBaselines + taskBars + links + taskConstraints + taskDeadlines;
+  this.$task_data.innerHTML = taskBg + taskBaselines + links + taskBars + taskConstraints + taskDeadlines;
   this.$task_bg = this.$task_data.childNodes[0];
   this.$task_baselines = this.$task_data.childNodes[1];
-  this.$task_links = this.$task_data.childNodes[3];
-  this.$task_bars = this.$task_data.childNodes[2];
+  this.$task_links = this.$task_data.childNodes[2];
+  this.$task_bars = this.$task_data.childNodes[3];
   this.$task_constraints = this.$task_data.childNodes[4];
   this.$task_deadlines = this.$task_data.childNodes[5];
   this._tasks = { col_width: 0, width: [], full_width: 0, trace_x: [], rendered: {} };
@@ -18905,6 +18906,7 @@ Timeline.prototype = { init: function(container) {
   this.$task_bg = null;
   this.$task_links = null;
   this.$task_bars = null;
+  this.$task_baselines = null
   this.$gantt = null;
   if (this.$config.rowStore) {
     this.$config.rowStore.detachEvent(this._staticBgHandler);
@@ -21292,34 +21294,7 @@ function createTaskRenderer$2(gantt2) {
       }
     }
     
-    // 任务条外围再包裹一层
-    const taskWrapDiv = document.createElement("div");
-    taskWrapDiv.appendChild(div)
-    taskWrapDiv.className = "gantt_task_wrap";
-
-    // 渲染基线
-    if(baselinesOnDifferentRow && task.baselines && task.baselines.length !== 0){
-      task.baselines.forEach((baseline, index) => {
-        const pos = view.getItemPosition(task, baseline.start_date, baseline.end_date )
-        const baselineDiv = document.createElement("div")
-        baselineDiv.className = `gantt_task_baseline gantt_task_baseline_${index}`
-        // const baselineHeight = (view.getItemHeight(task.id) - height - padd * 2 - 4)
-        const baselineHeight = 8
-        if (taskType == cfg.types.milestone) {
-          pos.left -= Math.round(baselineHeight / 2);
-          pos.width = baselineHeight;
-        }
-        var styles = ["left:" + pos.left + "px", "top:" + (padd * 2 + height + pos.top) + "px", "height:" + baselineHeight + "px", "width:" + pos.width + "px"];
-        if (taskType == cfg.types.milestone){
-          baselineDiv.className += " gantt_milestone_baseline"; 
-        }
-        baselineDiv.style.cssText = styles.join(";");
-        taskWrapDiv.appendChild(baselineDiv)
-      })
-    }
-
-
-    return taskWrapDiv;
+    return div;
   }
   function _render_side_content(task, template, cssClass, marginStyle) {
     if (!template) return null;
@@ -21496,6 +21471,47 @@ function createTaskRenderer$2(gantt2) {
 function createTaskRenderer$1(gantt2) {
   var defaultRender = createTaskRenderer$2(gantt2);
   return { render: defaultRender, update: null, isInViewPort: isBarInViewport, getVisibleRange: getVisibleTasksRange };
+}
+function createBaselinesRenderer(gantt2) {
+  function render(task, view, config) {
+    if (!gantt2.config.baselines || !task.baselines || !task.baselines.length) {
+      return false;
+    }
+    var container = document.createElement("div");
+    container.className = "gantt_baseline_nodes";
+    if (view.$config.item_attribute) {
+      container.setAttribute("data-task-row-id", task.id);
+    }
+
+    task.baselines.forEach(function(baseline, index) {
+      var pos = view.getItemPosition(task, baseline.start_date, baseline.end_date);
+      var div = document.createElement("div");
+      div.setAttribute(view.$config.item_attribute, task.id);
+      div.setAttribute("data-baseline-id", baseline.id);
+      div.className = "gantt_task_baseline gantt_task_baseline_" + index;
+      var height = 8;
+      
+      // 判断是否为里程碑
+      var taskType = gantt2.getTaskType(task.type);
+      var isMilestone = taskType == gantt2.config.types.milestone;
+
+      if (isMilestone) {
+        // 里程碑基线通常也是菱形，宽度等于高度
+        pos.width = height;
+        // 居中对齐
+        pos.left -= Math.round(height / 2);
+        div.className += " gantt_milestone_baseline";
+      }
+
+      var taskHeight = view.getBarHeight(task.id);
+      var top = pos.top + taskHeight + 6;
+      
+      div.style.cssText = "left:" + pos.left + "px; top:" + top + "px; width:" + pos.width + "px; height:" + height + "px;";
+      container.appendChild(div);
+    });
+    return container;
+  }
+  return { render: render, update: null, isInViewPort: isBarInViewport, getVisibleRange: getVisibleTasksRange };
 }
 function resourceHistogramRenderer() {
   console.error("You are trying to use a Pro feature that is not available in the GPL version.");
@@ -24064,6 +24080,7 @@ var initializer$1 = /* @__PURE__ */ function() {
       gantt2.$task_scale = timeline.$task_scale;
       gantt2.$task_data = timeline.$task_data;
       gantt2.$task_bg = timeline.$task_bg;
+      gantt2.$task_baselines = timeline.$task_baselines;
       gantt2.$task_links = timeline.$task_links;
       gantt2.$task_bars = timeline.$task_bars;
     }, _clearDomEvents: function() {
@@ -24367,7 +24384,7 @@ function initUI(gantt2) {
   }, taskDeadline: function() {
     return resourceHistogramRenderer();
   }, taskBaselines: function() {
-    return resourceHistogramRenderer();
+    return createBaselinesRenderer(gantt2);
   }, link: function() {
     return createLinkRender(gantt2);
   }, resourceRow: function() {

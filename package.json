@@ -5,7 +5,7 @@
   "main": "codebase/dhtmlxgantt.es.js",
   "types": "codebase/dhtmlxgantt.d.ts",
   "scripts": {
-    "dev": "vite"
+    "dev": "vite --host"
   },
   "repository": {
     "type": "git",
