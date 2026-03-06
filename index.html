@@ -2,7 +2,7 @@
  * @Author: YEYI millerye1995@foxmail.com
  * @Date: 2026-02-26 10:34:00
  * @LastEditors: YEYI millerye1995@foxmail.com
- * @LastEditTime: 2026-03-06 11:27:50
+ * @LastEditTime: 2026-03-06 13:37:45
  * @FilePath: \gantt\index.html
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -22,8 +22,9 @@
         overflow: hidden;
       }
       #gantt_here {
-        width: 100%;
-        height: calc(100% - 61px);
+        /* width: 100%; */
+        overflow: hidden;
+        height: 100%;
       }
       .gantt_control {
         height: 60px;
@@ -37,6 +38,7 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         position: relative;
         z-index: 10;
+        flex-wrap: wrap; /* 防止屏幕过小时溢出 */
       }
       .gantt_control button {
         padding: 8px 16px;
@@ -91,8 +93,18 @@
       <button id="view_split" class="active" onclick="setViewMode('split')">
         表格+甘特图
       </button>
+      <div class="separator"></div>
+      <button id="toggle_data_preview" onclick="toggleDataPreview()">数据预览</button>
     </div>
-    <div id="gantt_here"></div>
+    <div id="main_container" style="display: flex; height: calc(100% - 60px); width: 100%;">
+        <div id="gantt_here" style="flex: 1; height: 100%;"></div>
+        <div id="data_preview" style="width: 0px; height: 100%; border-left: 1px solid #e0e0e0; background: #f9f9f9; overflow: auto; transition: width 0.3s; display: none;">
+            <div style="padding: 10px;">
+                <h3 style="margin-top: 0; border-bottom: 1px solid #ddd; padding-bottom: 10px;">实时数据预览</h3>
+                <pre id="json_preview" style="font-family: monospace; font-size: 12px; color: #333; white-space: pre-wrap; word-wrap: break-word;"></pre>
+            </div>
+        </div>
+    </div>
     <script type="module">
       import { gantt } from "./codebase/sources/dhtmlxgantt.es.js";
       import { locale } from "./codebase/sources/config/locale.es.js";
@@ -111,6 +123,53 @@
 
         gantt.render();
       };
+      
+      var isPreviewOpen = false;
+      window.toggleDataPreview = function() {
+        isPreviewOpen = !isPreviewOpen;
+        const btn = document.getElementById("toggle_data_preview");
+        const previewDiv = document.getElementById("data_preview");
+        
+        if (isPreviewOpen) {
+          btn.classList.add("active");
+          previewDiv.style.display = "block";
+          // 稍微延迟一下设置宽度以触发 transition
+          // 使用 requestAnimationFrame 确保 display: block 生效后再设置宽度
+          requestAnimationFrame(() => {
+              previewDiv.style.width = "400px";
+              updateDataPreview(); 
+          });
+        } else {
+          btn.classList.remove("active");
+          previewDiv.style.width = "0px";
+          // 等待动画结束再隐藏
+          setTimeout(() => {
+              previewDiv.style.display = "none";
+          }, 300);
+        }
+        
+        // 触发 gantt 重新计算尺寸，确保甘特图适应新的容器宽度
+        // 这里的延迟应略大于 transition 时间
+        setTimeout(() => {
+             gantt.setSizes();
+        }, 310);
+      };
+
+      function updateDataPreview() {
+        if (!isPreviewOpen) return;
+        
+        const data = gantt.serialize();
+        
+        document.getElementById("json_preview").textContent = JSON.stringify(data, null, 2);
+      }
+
+      // 监听数据变化事件
+      gantt.attachEvent("onAfterTaskUpdate", updateDataPreview);
+      gantt.attachEvent("onAfterLinkAdd", updateDataPreview);
+      gantt.attachEvent("onAfterLinkDelete", updateDataPreview);
+      gantt.attachEvent("onAfterTaskAdd", updateDataPreview);
+      gantt.attachEvent("onAfterTaskDelete", updateDataPreview);
+      gantt.attachEvent("onDataRender", updateDataPreview); // 渲染时也更新
 
       window.toggleBaseline = function () {
         // 简单的切换基线显示逻辑
