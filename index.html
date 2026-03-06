@@ -2,7 +2,7 @@
  * @Author: YEYI millerye1995@foxmail.com
  * @Date: 2026-02-26 10:34:00
  * @LastEditors: YEYI millerye1995@foxmail.com
- * @LastEditTime: 2026-03-06 13:37:45
+ * @LastEditTime: 2026-03-06 14:33:28
  * @FilePath: \gantt\index.html
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -159,6 +159,19 @@
         if (!isPreviewOpen) return;
         
         const data = gantt.serialize();
+
+        data.data = data.data.map((task) => {
+          return {
+            id: task.id,
+            text: task.text,
+            start_date: task.start_date,
+            end_date: task.end_date,
+            duration: task.duration,
+            progress: task.progress,
+            type: task.type,
+            parent: task.parent,
+          };
+        });
         
         document.getElementById("json_preview").textContent = JSON.stringify(data, null, 2);
       }
@@ -296,7 +309,7 @@
       })
 
       gantt.config.columns = [
-        { name: "text", label: "任务名称", width: "*", tree: true },
+        { name: "text", label: "任务名称", width: "200", tree: true },
         {
           name: "base_start_date",
           label: "基线开始时间",
@@ -775,42 +788,7 @@
             { id: 17, start_date: "2025-04-16 00:00:00", duration: 2, text: "Task #5", progress: 0.5, parent: 12, open: true, end_date: "2025-04-18 00:00:00" },
           ],
           links: [],
-          baselines: [
-            { id: 1, task_id: 1, start_date: "2025-04-06 00:00:00", duration: 3, end_date: "2025-04-09 00:00:00" },
-            { id: 2, task_id: 1, start_date: "2025-04-03 00:00:00", duration: 2, end_date: "2025-04-05 00:00:00" },
-            { id: 3, task_id: 1, start_date: "2025-04-06 00:00:00", duration: 2, end_date: "2025-04-08 00:00:00" },
-            { id: 4, task_id: 2, start_date: "2025-04-06 00:00:00", duration: 1, end_date: "2025-04-10 00:00:00" },
-            { id: 5, task_id: 2, start_date: "2025-04-11 00:00:00", duration: 1, end_date: "2025-04-12 00:00:00" },
-            { id: 6, task_id: 2, start_date: "2025-04-13 00:00:00", duration: 1, end_date: "2025-04-14 00:00:00" },
-            { id: 7, task_id: 2, start_date: "2025-04-15 00:00:00", duration: 3, end_date: "2025-04-18 00:00:00" },
-            { id: 8, task_id: 2, start_date: "2025-04-19 00:00:00", duration: 1, end_date: "2025-04-20 00:00:00" },
-            { id: 9, task_id: 3, start_date: "2025-04-10 00:00:00", duration: 3, end_date: "2025-04-13 00:00:00" },
-            { id: 10, task_id: 3, start_date: "2025-04-14 00:00:00", duration: 2, end_date: "2025-04-16 00:00:00" },
-            { id: 11, task_id: 3, start_date: "2025-04-16 00:00:00", duration: 1, end_date: "2025-04-17 00:00:00" },
-            { id: 12, task_id: 8, start_date: "2025-04-02 00:00:00", duration: 4, end_date: "2025-04-06 00:00:00" },
-            { id: 13, task_id: 18, start_date: "2025-04-03 00:00:00", duration: 1, end_date: "2025-04-04 00:00:00" },
-            { id: 14, task_id: 18, start_date: "2025-04-05 00:00:00", duration: 1, end_date: "2025-04-06 00:00:00" },
-            { id: 15, task_id: 20, start_date: "2025-04-11 00:00:00", duration: 2, end_date: "2025-04-13 00:00:00" },
-            { id: 16, task_id: 21, start_date: "2025-04-16 00:00:00", duration: 1, end_date: "2025-04-17 00:00:00" },
-            { id: 17, task_id: 21, start_date: "2025-04-18 00:00:00", duration: 1, end_date: "2025-04-19 00:00:00" },
-            { id: 18, task_id: 15, start_date: "2025-04-04 00:00:00", duration: 3, end_date: "2025-04-07 00:00:00" },
-            { id: 19, task_id: 22, start_date: "2025-04-01 00:00:00", duration: 1, end_date: "2025-04-02 00:00:00" },
-            { id: 20, task_id: 22, start_date: "2025-04-03 00:00:00", duration: 1, end_date: "2025-04-04 00:00:00" },
-            { id: 21, task_id: 23, start_date: "2025-04-08 00:00:00", duration: 2, end_date: "2025-04-10 00:00:00" },
-            { id: 22, task_id: 24, start_date: "2025-04-11 00:00:00", duration: 1, end_date: "2025-04-12 00:00:00" },
-            { id: 23, task_id: 24, start_date: "2025-04-12 00:00:00", duration: 1, end_date: "2025-04-13 00:00:00" },
-            { id: 24, task_id: 24, start_date: "2025-04-13 00:00:00", duration: 1, end_date: "2025-04-14 00:00:00" },
-            { id: 25, task_id: 24, start_date: "2025-04-14 00:00:00", duration: 1, end_date: "2025-04-15 00:00:00" },
-            { id: 26, task_id: 24, start_date: "2025-04-15 00:00:00", duration: 1, end_date: "2025-04-16 00:00:00" },
-            { id: 27, task_id: 24, start_date: "2025-04-16 00:00:00", duration: 1, end_date: "2025-04-17 00:00:00" },
-            { id: 28, task_id: 24, start_date: "2025-04-17 00:00:00", duration: 1, end_date: "2025-04-18 00:00:00" },
-            { id: 29, task_id: 24, start_date: "2025-04-18 00:00:00", duration: 1, end_date: "2025-04-19 00:00:00" },
-            { id: 30, task_id: 24, start_date: "2025-04-19 00:00:00", duration: 1, end_date: "2025-04-20 00:00:00" },
-            { id: 31, task_id: 24, start_date: "2025-04-20 00:00:00", duration: 1, end_date: "2025-04-21 00:00:00" },
-            { id: 32, task_id: 24, start_date: "2025-04-21 00:00:00", duration: 1, end_date: "2025-04-22 00:00:00" },
-            { id: 33, task_id: 24, start_date: "2025-04-22 00:00:00", duration: 1, end_date: "2025-04-23 00:00:00" },
-            { id: 34, task_id: 3, start_date: "2025-04-08 00:00:00", duration: 1, end_date: "2025-04-09 00:00:00" },
-          ],
+          baselines: [],
         }
       );
 

@@ -21477,6 +21477,12 @@ function createBaselinesRenderer(gantt2) {
     if (!gantt2.config.baselines || !task.baselines || !task.baselines.length) {
       return false;
     }
+    const baselinesOnDifferentRow = gantt2.config.baselines && (gantt2.config.baselines.render_mode == "separateRow" || gantt2.config.baselines.render_mode == "individualRow");
+    
+    if (!baselinesOnDifferentRow) {
+      return false;
+    }
+
     var container = document.createElement("div");
     container.className = "gantt_baseline_nodes";
     if (view.$config.item_attribute) {
@@ -21504,7 +21510,7 @@ function createBaselinesRenderer(gantt2) {
       }
 
       var taskHeight = view.getBarHeight(task.id);
-      var top = pos.top + taskHeight + 6;
+      var top = pos.top + taskHeight + 4;
       
       div.style.cssText = "left:" + pos.left + "px; top:" + top + "px; width:" + pos.width + "px; height:" + height + "px;";
       container.appendChild(div);
