@@ -2,7 +2,7 @@
  * @Author: YEYI millerye1995@foxmail.com
  * @Date: 2026-02-26 10:34:00
  * @LastEditors: YEYI millerye1995@foxmail.com
- * @LastEditTime: 2026-03-06 14:33:28
+ * @LastEditTime: 2026-03-16 15:50:13
  * @FilePath: \gantt\index.html
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -247,19 +247,17 @@
             // 仅表格模式
             gantt.config.show_grid = true;
             gantt.config.show_chart = false;
-            // 确保表格宽度占满，或者足够大
-            gantt.config.grid_width = document.documentElement.clientWidth - 20; 
         } else if (mode === "gantt") {
             // 仅甘特图模式
             gantt.config.show_grid = false;
             gantt.config.show_chart = true;
         } else {
             // 表格+甘特图模式 (split)
-            gantt.config.show_grid = true;
-            gantt.config.show_chart = true;
             const docWidth = document.documentElement.clientWidth;
             const gridWidth = docWidth / 2;
             gantt.config.grid_width = gridWidth > 1000 ? gridWidth : 1000;
+            gantt.config.show_grid = true;
+            gantt.config.show_chart = true;
         }
         gantt.render();
       };
@@ -267,12 +265,15 @@
       // 获取文档流宽度
       const docWidth = document.documentElement.clientWidth;
       const gridWidth = docWidth / 2;
+      gantt.config.grid_width = gridWidth > 1000 ? gridWidth : 1000;
 
       // 配置甘特图
       // gantt.config.date_format = "%Y-%m-%d %H:%i";
       gantt.config.date_format = "%Y-%m-%d %H:%i:%s";
 
-      gantt.config.grid_width = gridWidth > 1000 ? gridWidth : 1000;
+      // 任务允许拖拽上下移动
+      gantt.config.order_branch = true
+      gantt.config.order_branch_free = true
 
       gantt.config.scales = [
         { unit: "month", step: 1, format: "%Y年%F" },
@@ -309,11 +310,10 @@
       })
 
       gantt.config.columns = [
-        { name: "text", label: "任务名称", width: "200", tree: true },
+        { name: "text", label: "任务名称", tree: true },
         {
           name: "base_start_date",
           label: "基线开始时间",
-          width: 100,
           align: "center",
           template: function (task) {
             const baselines = gantt.getTaskBaselines(task.id);
@@ -335,7 +335,6 @@
         {
           name: "base_end_date",
           label: "基线完成时间",
-          width: 100,
           align: "center",
           template: function (task) {
             const baselines = gantt.getTaskBaselines(task.id);
@@ -373,8 +372,8 @@
             }
           },
         },
-        { name: "start_date", label: "开始时间", width: 100, align: "center" },
-        { name: "end_date", label: "完成时间", width: 100, align: "center" },
+        { name: "start_date", label: "开始时间", align: "center" },
+        { name: "end_date", label: "完成时间", align: "center" },
         {
           name: "duration",
           label: "工期",
@@ -435,14 +434,13 @@
         {
           name: "description",
           label: "任务描述",
-          width: 150,
           align: "center",
           template: function (task) {
             return task.description || "-";
           },
         },
 
-        { name: "add", label: "", width: 44 },
+        { name: "add", label: ""},
       ];
 
       // 默认的 lightbox 定义
