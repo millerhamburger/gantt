@@ -71,13 +71,12 @@ export default class GanttManager {
     config.min_task_grid_row_height = 10; // 最小行高限制
     config.open_split_tasks = true; // 允许展开/折叠分割任务
 
-    // 基线配置初始化（初始时不渲染基线）
-    if (!config.baselines) {
-      config.baselines = { render_mode: false };
-    }
+    // 基线配置初始化
     config.baselines.render_mode = "separateRow"; // 基线渲染模式：独立一行
 
     config.show_empty_state = true; // 无数据时显示空状态
+
+    config.min_duration = 24*60*60*1000; // （1天）
 
     // 启用特定插件
     this.gantt.plugins({
@@ -353,19 +352,62 @@ export default class GanttManager {
 
   /**
    * 切换基线的显示状态
+   * @param {boolean} [show] - 可选，强制设置显示(true)或隐藏(false)；若不传则自动切换
    * @returns {boolean} 切换后的基线是否处于显示状态
    */
-  toggleBaseline() {
+  toggleBaseline(show) {
     if (!this.gantt.config.baselines) {
       this.gantt.config.baselines = { render_mode: false };
     }
-    // 切换 "separateRow" 与 false
-    this.gantt.config.baselines.render_mode = this.gantt.config.baselines
-      .render_mode
-      ? false
-      : "separateRow";
+    
+    let shouldShow;
+    if (typeof show === 'boolean') {
+        shouldShow = show;
+    } else {
+        shouldShow = !this.gantt.config.baselines.render_mode;
+    }
+
+    this.gantt.config.baselines.render_mode = shouldShow ? "separateRow" : false;
     this.gantt.render();
     return !!this.gantt.config.baselines.render_mode;
+  }
+
+  /**
+   * 将当前任务的开始时间和结束时间设置为基线
+   * 遍历所有任务，为每个任务添加一条基线数据
+   */
+  setBaselineToCurrent() {
+    this.gantt.batchUpdate(() => {
+      this.gantt.eachTask((task) => {
+        // 构造新的基线对象
+        const baseline = {
+          start_date: new Date(task.start_date),
+          end_date: new Date(task.end_date),
+          task_id: task.id,
+          duration: task.duration,
+        };
+        
+        // 追加新的基线
+        task.baselines = [baseline];
+        this.gantt.updateTask(task.id);
+      });
+    });
+    this.gantt.render();
+  }
+
+  /**
+   * 删除所有任务的基线
+   */
+  removeAllBaselines() {
+    this.gantt.batchUpdate(() => {
+      this.gantt.eachTask((task) => {
+        if (task.baselines) {
+          task.baselines = [];
+          this.gantt.updateTask(task.id);
+        }
+      });
+    });
+    this.gantt.render();
   }
 
   /**
@@ -374,16 +416,19 @@ export default class GanttManager {
    */
   setScale(mode) {
     if (mode === "day") {
+      this.gantt.config.min_duration = 24 * 60 * 60 * 1000; // 1天
       this.gantt.config.scales = [
         { unit: "month", step: 1, format: "%Y年%F" },
         { unit: "day", step: 1, format: "%d日" },
       ];
     } else if (mode === "week") {
+      this.gantt.config.min_duration = 7 * 24 * 60 * 60 * 1000; // 1周
       this.gantt.config.scales = [
         { unit: "month", step: 1, format: "%Y年%F" },
         { unit: "week", step: 1, format: "%W周" },
       ];
     } else if (mode === "month") {
+      this.gantt.config.min_duration = 30 * 24 * 60 * 60 * 1000; // 1个月 (按30天计算)
       this.gantt.config.scales = [
         { unit: "year", step: 1, format: "%Y年" },
         { unit: "month", step: 1, format: "%M" },
@@ -398,11 +443,9 @@ export default class GanttManager {
    */
   setViewMode(mode) {
     if (mode === "grid") {
-      this.gantt.config.grid_width = document.documentElement.clientWidth;
       this.gantt.config.show_grid = true;
       this.gantt.config.show_chart = false;
     } else if (mode === "gantt") {
-      this.gantt.config.grid_width = 0;
       this.gantt.config.show_grid = false;
       this.gantt.config.show_chart = true;
     } else {
@@ -411,10 +454,10 @@ export default class GanttManager {
       this.gantt.config.grid_width = this.options.gridWidth;
       this.gantt.config.show_grid = true;
       this.gantt.config.show_chart = true;
+
     }
 
     this.gantt.render();
-
   }
 
   /**
@@ -433,6 +476,7 @@ export default class GanttManager {
       progress: task.progress,
       type: task.type,
       parent: task.parent,
+      baselines: task.baselines,
     }));
     return data;
   }
