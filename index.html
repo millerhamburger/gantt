@@ -2,7 +2,7 @@
  * @Author: YEYI millerye1995@foxmail.com
  * @Date: 2026-02-26 10:34:00
  * @LastEditors: YEYI millerye1995@foxmail.com
- * @LastEditTime: 2026-03-16 15:50:13
+ * @LastEditTime: 2026-03-18 13:38:20
  * @FilePath: \gantt\index.html
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -75,26 +75,26 @@
   </head>
   <body>
     <div class="gantt_control">
-      <button id="toggle_critical" class="active" onclick="toggleCritical()">
+      <button id="toggle_critical" class="active">
         关键路径
       </button>
-      <button id="toggle_baseline" class="active" onclick="toggleBaseline()">
+      <button id="toggle_baseline" class="active">
         基线
       </button>
       <div class="separator"></div>
-      <button id="scale_day" class="active" onclick="setScale('day')">
+      <button id="scale_day" class="active">
         日
       </button>
-      <button id="scale_week" onclick="setScale('week')">周</button>
-      <button id="scale_month" onclick="setScale('month')">月</button>
+      <button id="scale_week">周</button>
+      <button id="scale_month">月</button>
       <div class="separator"></div>
-      <button id="view_grid" onclick="setViewMode('grid')">仅表格</button>
-      <button id="view_gantt" onclick="setViewMode('gantt')">仅甘特图</button>
-      <button id="view_split" class="active" onclick="setViewMode('split')">
+      <button id="view_grid">仅表格</button>
+      <button id="view_gantt">仅甘特图</button>
+      <button id="view_split" class="active">
         表格+甘特图
       </button>
       <div class="separator"></div>
-      <button id="toggle_data_preview" onclick="toggleDataPreview()">数据预览</button>
+      <button id="toggle_data_preview">数据预览</button>
     </div>
     <div id="main_container" style="display: flex; height: calc(100% - 60px); width: 100%;">
         <div id="gantt_here" style="flex: 1; height: 100%;"></div>
@@ -106,691 +106,165 @@
         </div>
     </div>
     <script type="module">
-      import { gantt } from "./codebase/sources/dhtmlxgantt.es.js";
-      import { locale } from "./codebase/sources/config/locale.es.js";
+      import GanttManager from "./codebase/sources/GanttManager.js";
 
-      // 暴露给 window 以便 HTML 按钮调用
-      window.toggleCritical = function () {
-        gantt.config.highlight_critical_path =
-          !gantt.config.highlight_critical_path;
+      // 初始化 Gantt 管理器 (传入DOM元素)
+      const ganttContainer = document.getElementById("gantt_here");
+      const ganttManager = new GanttManager(ganttContainer);
+      ganttManager.init();
 
-        const btn = document.getElementById("toggle_critical");
-        if (gantt.config.highlight_critical_path) {
-          btn.classList.add("active");
-        } else {
-          btn.classList.remove("active");
-        }
+      // --- 绑定工具栏事件开始 ---
+      const toggleCriticalBtn = document.getElementById("toggle_critical");
+      toggleCriticalBtn.addEventListener("click", () => {
+          const isActive = ganttManager.toggleCritical();
+          isActive ? toggleCriticalBtn.classList.add("active") : toggleCriticalBtn.classList.remove("active");
+      });
 
-        gantt.render();
+      const toggleBaselineBtn = document.getElementById("toggle_baseline");
+      toggleBaselineBtn.addEventListener("click", () => {
+          const isActive = ganttManager.toggleBaseline();
+          isActive ? toggleBaselineBtn.classList.add("active") : toggleBaselineBtn.classList.remove("active");
+      });
+
+      const scaleButtons = {
+          day: document.getElementById("scale_day"),
+          week: document.getElementById("scale_week"),
+          month: document.getElementById("scale_month")
       };
-      
-      var isPreviewOpen = false;
-      window.toggleDataPreview = function() {
-        isPreviewOpen = !isPreviewOpen;
-        const btn = document.getElementById("toggle_data_preview");
-        const previewDiv = document.getElementById("data_preview");
-        
-        if (isPreviewOpen) {
-          btn.classList.add("active");
-          previewDiv.style.display = "block";
-          // 稍微延迟一下设置宽度以触发 transition
-          // 使用 requestAnimationFrame 确保 display: block 生效后再设置宽度
-          requestAnimationFrame(() => {
-              previewDiv.style.width = "400px";
-              updateDataPreview(); 
+      Object.entries(scaleButtons).forEach(([mode, btn]) => {
+          btn?.addEventListener("click", () => {
+              ganttManager.setScale(mode);
+              Object.values(scaleButtons).forEach(b => b?.classList.remove("active"));
+              btn.classList.add("active");
           });
-        } else {
-          btn.classList.remove("active");
-          previewDiv.style.width = "0px";
-          // 等待动画结束再隐藏
-          setTimeout(() => {
-              previewDiv.style.display = "none";
-          }, 300);
-        }
-        
-        // 触发 gantt 重新计算尺寸，确保甘特图适应新的容器宽度
-        // 这里的延迟应略大于 transition 时间
-        setTimeout(() => {
-             gantt.setSizes();
-        }, 310);
+      });
+
+      const viewButtons = {
+          grid: document.getElementById("view_grid"),
+          gantt: document.getElementById("view_gantt"),
+          split: document.getElementById("view_split")
       };
+      Object.entries(viewButtons).forEach(([mode, btn]) => {
+          btn?.addEventListener("click", () => {
+              ganttManager.setViewMode(mode);
+              Object.values(viewButtons).forEach(b => b?.classList.remove("active"));
+              btn.classList.add("active");
+          });
+      });
 
-      function updateDataPreview() {
-        if (!isPreviewOpen) return;
-        
-        const data = gantt.serialize();
+      let isPreviewOpen = false;
+      const togglePreviewBtn = document.getElementById("toggle_data_preview");
+      const previewDiv = document.getElementById("data_preview");
+      const previewEl = document.getElementById("json_preview");
 
-        data.data = data.data.map((task) => {
-          return {
-            id: task.id,
-            text: task.text,
-            start_date: task.start_date,
-            end_date: task.end_date,
-            duration: task.duration,
-            progress: task.progress,
-            type: task.type,
-            parent: task.parent,
-          };
-        });
-        
-        document.getElementById("json_preview").textContent = JSON.stringify(data, null, 2);
+      function updatePreviewData() {
+          if (!isPreviewOpen) return;
+          const data = ganttManager.getSerializedData();
+          if (previewEl) {
+              previewEl.textContent = JSON.stringify(data, null, 2);
+          }
       }
 
-      // 监听数据变化事件
-      gantt.attachEvent("onAfterTaskUpdate", updateDataPreview);
-      gantt.attachEvent("onAfterLinkAdd", updateDataPreview);
-      gantt.attachEvent("onAfterLinkDelete", updateDataPreview);
-      gantt.attachEvent("onAfterTaskAdd", updateDataPreview);
-      gantt.attachEvent("onAfterTaskDelete", updateDataPreview);
-      gantt.attachEvent("onDataRender", updateDataPreview); // 渲染时也更新
+      togglePreviewBtn.addEventListener("click", () => {
+          isPreviewOpen = !isPreviewOpen;
+          if (isPreviewOpen) {
+              togglePreviewBtn.classList.add("active");
+              previewDiv.style.display = "block";
+              requestAnimationFrame(() => {
+                  previewDiv.style.width = "400px";
+                  updatePreviewData();
+              });
+          } else {
+              togglePreviewBtn.classList.remove("active");
+              previewDiv.style.width = "0px";
+              setTimeout(() => {
+                  previewDiv.style.display = "none";
+              }, 300);
+          }
+          setTimeout(() => ganttManager.resize(), 310);
+      });
 
-      window.toggleBaseline = function () {
-        // 简单的切换基线显示逻辑
-        if (!gantt.config.baselines) {
-          gantt.config.baselines = { render_mode: false };
-        }
-
-        // 切换 render_mode
-        if (!gantt.config.baselines.render_mode) {
-          gantt.config.baselines.render_mode = "separateRow";
-        } else {
-          gantt.config.baselines.render_mode = false;
-        }
-
-        const btn = document.getElementById("toggle_baseline");
-        if (gantt.config.baselines.render_mode) {
-          btn.classList.add("active");
-        } else {
-          btn.classList.remove("active");
-        }
-
-        gantt.render();
-      };
-
-      window.setScale = function (mode) {
-        const modes = ["day", "week", "month"];
-        modes.forEach((m) => {
-          const btn = document.getElementById("scale_" + m);
-          if (m === mode) btn.classList.add("active");
-          else btn.classList.remove("active");
-        });
-
-        if (mode === "day") {
-          gantt.config.scales = [
-            { unit: "month", step: 1, format: "%Y年%F" },
-            { unit: "day", step: 1, format: "%d日" },
-          ];
-        } else if (mode === "week") {
-          gantt.config.scales = [
-            { unit: "month", step: 1, format: "%Y年%F" },
-            { unit: "week", step: 1, format: "%W周" },
-          ];
-        } else if (mode === "month") {
-          gantt.config.scales = [
-            { unit: "year", step: 1, format: "%Y年" },
-            { unit: "month", step: 1, format: "%M" },
-          ];
-        }
-        gantt.render();
-      };
-
-      window.setViewMode = function (mode) {
-        // 更新按钮状态
-        const modes = ["grid", "gantt", "split"];
-        modes.forEach((m) => {
-          const btn = document.getElementById("view_" + m);
-          if (m === mode) btn.classList.add("active");
-          else btn.classList.remove("active");
-        });
-
-        if (mode === "grid") {
-            // 仅表格模式
-            gantt.config.show_grid = true;
-            gantt.config.show_chart = false;
-        } else if (mode === "gantt") {
-            // 仅甘特图模式
-            gantt.config.show_grid = false;
-            gantt.config.show_chart = true;
-        } else {
-            // 表格+甘特图模式 (split)
-            const docWidth = document.documentElement.clientWidth;
-            const gridWidth = docWidth / 2;
-            gantt.config.grid_width = gridWidth > 1000 ? gridWidth : 1000;
-            gantt.config.show_grid = true;
-            gantt.config.show_chart = true;
-        }
-        gantt.render();
-      };
-
-      // 获取文档流宽度
-      const docWidth = document.documentElement.clientWidth;
-      const gridWidth = docWidth / 2;
-      gantt.config.grid_width = gridWidth > 1000 ? gridWidth : 1000;
-
-      // 配置甘特图
-      // gantt.config.date_format = "%Y-%m-%d %H:%i";
-      gantt.config.date_format = "%Y-%m-%d %H:%i:%s";
-
-      // 任务允许拖拽上下移动
-      gantt.config.order_branch = true
-      gantt.config.order_branch_free = true
-
-      gantt.config.scales = [
-        { unit: "month", step: 1, format: "%Y年%F" },
-        { unit: "day", step: 1, format: "%j日" },
-      ];
-
-      gantt.config.resize_rows = true;
-      gantt.config.row_height = 30;
-      gantt.config.min_task_grid_row_height = 10;
-      gantt.config.open_split_tasks = true;
-
-      gantt.config.baselines.render_mode = "separateRow";
-
-      // 显示空状态
-      gantt.config.show_empty_state = true;
-
-      gantt.plugins({
-        /*!*/ critical_path: true /*!*/,
-        tooltip: true
-      }); /*!*/
-
-      gantt.config.highlight_critical_path = true;
-
-      gantt.templates.tooltip_date_format = gantt.date.date_to_str("%Y/%m/%d");
-      gantt.attachEvent("onGanttReady", function () {
-        var tooltips = gantt.ext.tooltips;
-
-        gantt.templates.tooltip_text = function (start, end, task) {
-          return "<b>任务名称:</b> " + task.text + "<br/>" +
-            "<b>时间范围:</b> " + gantt.templates.tooltip_date_format(start) + "-" + gantt.templates.tooltip_date_format(end) + "<br/>" +
-            "<b>工期:</b> " + task.duration + "天" + "<br/>" +
-            "<b>完成度:</b> " + Math.round(task.progress * 100) + "%"
-        }
-      })
-
-      gantt.config.columns = [
-        { name: "text", label: "任务名称", tree: true },
-        {
-          name: "base_start_date",
-          label: "基线开始时间",
-          align: "center",
-          template: function (task) {
-            const baselines = gantt.getTaskBaselines(task.id);
-            if (baselines && baselines.length !== 0) {
-              return baselines.reduce(
-                (prev, cur) => {
-                  if (!prev.start_date || cur.start_date < prev.start_date) {
-                    prev.start_date = cur.start_date;
-                  }
-                  return prev;
-                },
-                { start_date: null },
-              ).start_date;
-            } else {
-              return "-";
-            }
-          },
-        },
-        {
-          name: "base_end_date",
-          label: "基线完成时间",
-          align: "center",
-          template: function (task) {
-            const baselines = gantt.getTaskBaselines(task.id);
-            if (baselines && baselines.length !== 0) {
-              return baselines.reduce(
-                (prev, cur) => {
-                  if (!prev.end_date || cur.end_date > prev.end_date) {
-                    prev.end_date = cur.end_date;
-                  }
-                  return prev;
-                },
-                { end_date: null },
-              ).end_date;
-            } else {
-              return "-";
-            }
-          },
-        },
-        {
-          name: "base_duration",
-          label: "基线工期",
-          align: "center",
-          template: function (task) {
-            const baselines = gantt.getTaskBaselines(task.id);
-            if (baselines && baselines.length !== 0) {
-              return baselines.reduce(
-                (prev, cur) => {
-                  prev.duration += cur.duration;
-                  return prev;
-                },
-                { duration: 0 },
-              ).duration;
-            } else {
-              return "-";
-            }
-          },
-        },
-        { name: "start_date", label: "开始时间", align: "center" },
-        { name: "end_date", label: "完成时间", align: "center" },
-        {
-          name: "duration",
-          label: "工期",
-          align: "center",
-          template: function (task) {
-            return task.duration + "天";
-          },
-        },
-        {
-          name: "status",
-          label: "执行情况",
-          align: "center",
-          template: function (task) {
-            if (task.progress === 0) {
-              return "未开始";
-            }
-            return task.progress === 1 ? "已完成" : "进行中";
-          },
-        },
-        {
-          name: "progress",
-          label: "完成比例",
-          align: "center",
-          template: function (task) {
-            return Math.round(task.progress * 100) + "%";
-          },
-        },
-        // {
-        //   name: "owner",
-        //   label: "负责人",
-        //   width: 80,
-        //   align: "center",
-        //   template: function (task) {
-        //     return task.owner || "-";
-        //   },
-        // },
-        // 相关方
-        // {
-        //   name: "related",
-        //   label: "相关方",
-        //   width: 80,
-        //   align: "center",
-        //   template: function (task) {
-        //     return task.related || "-";
-        //   },
-        // },
-        // 前置任务
-        // {
-        //   name: "predecessors",
-        //   label: "前置任务",
-        //   width: 80,
-        //   align: "center",
-        //   template: function (task) {
-        //     return task.predecessors || "-";
-        //   },
-        // },
-        // 任务描述
-        {
-          name: "description",
-          label: "任务描述",
-          align: "center",
-          template: function (task) {
-            return task.description || "-";
-          },
-        },
-
-        { name: "add", label: ""},
-      ];
-
-      // 默认的 lightbox 定义
-      gantt.config.lightbox.sections = [
-        {
-          name: "任务名称",
-          height: 70,
-          map_to: "text",
-          type: "textarea",
-          focus: true,
-        },
-        { name: "任务类型", type: "typeselect", map_to: "type" },
-        { name: "time", height: 72, map_to: "auto", type: "duration" },
-        {
-          name: "父任务",
-          type: "parent",
-          allow_root: "true",
-          root_label: "无父任务",
-        },
-        {
-          name: "任务描述",
-          height: 70,
-          map_to: "description",
-          type: "textarea",
-          placeholder: "请输入任务描述",
-        },
-        { name: "基线", height: 100, type: "baselines", map_to: "baselines" },
-      ];
-
-      gantt.config.lightbox.project_sections = [
-        {
-          name: "任务名称",
-          height: 70,
-          map_to: "text",
-          type: "textarea",
-          focus: true,
-        },
-        { name: "任务类型", type: "typeselect", map_to: "type" },
-        {
-          name: "父任务",
-          type: "parent",
-          allow_root: "true",
-          root_label: "无父任务",
-        },
-        {
-          name: "任务描述",
-          height: 70,
-          map_to: "description",
-          type: "textarea",
-          placeholder: "请输入任务描述",
-        },
-        { name: "基线", height: 100, type: "baselines", map_to: "baselines" },
-      ];
-
-      gantt.config.lightbox.milestone_sections = [
-        {
-          name: "任务名称",
-          height: 70,
-          map_to: "text",
-          type: "textarea",
-          focus: true,
-        },
-        { name: "任务类型", type: "typeselect", map_to: "type" },
-        {
-          name: "time",
-          single_date: true,
-          height: 72,
-          map_to: "auto",
-          type: "duration",
-        },
-        {
-          name: "父任务",
-          type: "parent",
-          allow_root: "true",
-          root_label: "无父任务",
-        },
-        {
-          name: "任务描述",
-          height: 70,
-          map_to: "description",
-          type: "textarea",
-          placeholder: "请输入任务描述",
-        },
-        { name: "基线", height: 100, type: "baselines", map_to: "baselines" },
-      ];
-
-      // 中文
-      gantt.i18n.addLocale("cn", locale);
-      gantt.i18n.setLocale("cn");
+      ganttManager.setDataChangeCallback(updatePreviewData);
+      // --- 绑定工具栏事件结束 ---
 
       // 模拟大规模数据
       function generateData(count) {
         var tasks = {
           data: [],
           links: [],
-          baselines: [] // 也生成一些基线数据
+          baselines: []
         };
 
         var start = new Date(2024, 6, 1);
         
-        // 创建一个根项目
-        tasks.data.push({
-            id: 1,
-            text: "Project Root",
-            start_date: start,
-            type: "project",
-            open: true
-        });
+        tasks.data.push({ id: 1, text: "Project Root", start_date: start, type: "project", open: true });
 
         for (var i = 1; i < count; i++) {
           var date = new Date(start);
-          date.setDate(start.getDate() + (i % 60)); // 分散在两个月内
+          date.setDate(start.getDate() + (i % 60));
           
           var duration = Math.floor(Math.random() * 10) + 1;
-          var parent = 1;
           
-          // 每50个任务创建一个子项目节点，构建层级
           if (i % 50 === 0) {
-              tasks.data.push({
-                  id: i + 1,
-                  text: "Sub Project " + i,
-                  start_date: date,
-                  type: "project",
-                  open: true, // 默认折叠以提高初始加载感知性能
-                  parent: 1
-              });
+              tasks.data.push({ id: i + 1, text: "Sub Project " + i, start_date: date, type: "project", open: true, parent: 1 });
           } else {
-              // 寻找最近的子项目作为父节点
               var parentId = Math.floor(i / 50) * 50 + 1;
-              if (parentId === 1) parentId = 1; // 前49个挂在根节点
+              if (parentId === 1) parentId = 1;
 
-              var task = {
-                id: i + 1,
-                text: "Task " + i,
-                start_date: date,
-                duration: duration,
-                progress: Math.random(),
-                parent: parentId
-              };
+              var task = { id: i + 1, text: "Task " + i, start_date: date, duration: duration, progress: Math.random(), parent: parentId };
               
-              // 随机添加一些里程碑
               if (i % 20 === 0) {
-                  task.type = "milestone";
-                  task.duration = 0;
-                  task.text = "Milestone " + i;
+                  task.type = "milestone"; task.duration = 0; task.text = "Milestone " + i;
               }
 
               tasks.data.push(task);
 
-              // 随机生成链接
               if (i > 2 && Math.random() > 0.6) {
-                  tasks.links.push({
-                      id: tasks.links.length + 1,
-                      source: i, // 链接到前一个任务
-                      target: i + 1,
-                      type: "0" // finish_to_start
-                  });
+                  tasks.links.push({ id: tasks.links.length + 1, source: i, target: i + 1, type: "0" });
               }
 
-              // 随机生成基线
               if (i % 3 === 0) {
                   var baselineStart = new Date(date);
-                  baselineStart.setDate(date.getDate() - 2); // 基线比计划早两天
-                  tasks.baselines.push({
-                      task_id: i + 1,
-                      start_date: baselineStart,
-                      duration: duration + 4, // 基线工期稍长
-                      end_date: new Date(baselineStart.getTime() + (duration + 4) * 24 * 60 * 60 * 1000)
-                  });
+                  baselineStart.setDate(date.getDate() - 2);
+                  tasks.baselines.push({ task_id: i + 1, start_date: baselineStart, duration: duration + 4, end_date: new Date(baselineStart.getTime() + (duration + 4) * 24 * 60 * 60 * 1000) });
               }
           }
         }
         return tasks;
       }
 
-      // 初始化数据
-      // const data = { ... } // 注释掉旧数据
-      const data = generateData(2000);
-
-      // 初始化
-      gantt.init("gantt_here");
-      gantt.parse(
-        {
+      // 也可以使用原有的静态数据
+      const staticData = {
           data: [
-            {
-              id: 1,
-              start_date: "2025-04-04 00:00:00",
-              duration: 12,
-              text: "Project #1",
-              progress: 0.1,
-              parent: 0,
-              open: true,
-              type: "project",
-              end_date: "2025-04-16 00:00:00",
-            },
-            {
-              id: 2,
-              start_date: "2025-04-04 00:00:00",
-              duration: 2,
-              text: "Task #1",
-              progress: 0.5,
-              parent: 1,
-              open: true,
-              end_date: "2025-04-06 00:00:00"
-            },
-            {
-              id: 5,
-              start_date: "2025-04-05 00:00:00",
-              duration: 3,
-              text: "Task #1.1",
-              progress: 0.34,
-              parent: 2,
-              open: true,
-              end_date: "2025-04-08 00:00:00"
-            },
+            { id: 1, start_date: "2025-04-04 00:00:00", duration: 12, text: "Project #1", progress: 0.1, parent: 0, open: true, type: "project", end_date: "2025-04-16 00:00:00" },
+            { id: 2, start_date: "2025-04-04 00:00:00", duration: 2, text: "Task #1", progress: 0.5, parent: 1, open: true, end_date: "2025-04-06 00:00:00" },
+            { id: 5, start_date: "2025-04-05 00:00:00", duration: 3, text: "Task #1.1", progress: 0.34, parent: 2, open: true, end_date: "2025-04-08 00:00:00" },
             { id: 6, start_date: "2025-04-09 00:00:00", duration: 4, text: "Task #1.2", progress: 0.5, parent: 2, open: true, end_date: "2025-04-13 00:00:00" },
-            {
-              id: 3,
-              start_date: "2025-04-06 00:00:00",
-              duration: 0,
-              text: "Task #2",
-              progress: 0.7,
-              parent: 1,
-              open: true,
-              end_date: "2025-04-06 00:00:00",
-              type: "milestone"
-            },
+            { id: 3, start_date: "2025-04-06 00:00:00", duration: 0, text: "Task #2", progress: 0.7, parent: 1, open: true, end_date: "2025-04-06 00:00:00", type: "milestone" },
             { id: 7, start_date: "2025-04-11 00:00:00", duration: 5, text: "Task #2.1", progress: 0.2, parent: 3, open: true, end_date: "2025-04-16 00:00:00" },
-            {
-              id: 8,
-              start_date: "2025-04-05 00:00:00",
-              duration: 4,
-              text: "Task #2.2",
-              progress: 0.9,
-              parent: 3,
-              open: true,
-              end_date: "2025-04-09 00:00:00"
-            },
-            {
-              id: 12,
-              start_date: "2025-04-02 00:00:00",
-              duration: 16,
-              text: "Project #2",
-              progress: 0,
-              parent: 0,
-              open: true,
-              type: "project",
-              end_date: "2025-04-18 00:00:00",
-            },
+            { id: 8, start_date: "2025-04-05 00:00:00", duration: 4, text: "Task #2.2", progress: 0.9, parent: 3, open: true, end_date: "2025-04-09 00:00:00" },
+            { id: 12, start_date: "2025-04-02 00:00:00", duration: 16, text: "Project #2", progress: 0, parent: 0, open: true, type: "project", end_date: "2025-04-18 00:00:00" },
             { id: 13, start_date: "2025-04-02 00:00:00", duration: 10, text: "Task #1", progress: 0.2, parent: 12, open: true, end_date: "2025-04-12 00:00:00" },
-            {
-              id: 14,
-              start_date: "2025-04-03 00:00:00",
-              duration: 2,
-              text: "Task #2",
-              progress: 0.9,
-              parent: 12,
-              render: "split",
-              end_date: "2025-04-05 00:00:00"
-            },
-            {
-              id: 18,
-              start_date: "2025-04-06 00:00:00",
-              duration: 1,
-              text: "Task #2.1",
-              progress: 0.3,
-              parent: 14,
-              open: true,
-              end_date: "2025-04-07 00:00:00"
-            },
+            { id: 14, start_date: "2025-04-03 00:00:00", duration: 2, text: "Task #2", progress: 0.9, parent: 12, render: "split", end_date: "2025-04-05 00:00:00" },
+            { id: 18, start_date: "2025-04-06 00:00:00", duration: 1, text: "Task #2.1", progress: 0.3, parent: 14, open: true, end_date: "2025-04-07 00:00:00" },
             { id: 19, start_date: "2025-04-09 00:00:00", duration: 2, text: "Task #2.2", progress: 0.6, parent: 14, open: true, end_date: "2025-04-11 00:00:00" },
-            {
-              id: 20,
-              start_date: "2025-04-12 00:00:00",
-              duration: 2,
-              text: "Task #2.3",
-              progress: 0.5,
-              parent: 14,
-              open: true,
-              end_date: "2025-04-14 00:00:00"
-            },
-            {
-              id: 21,
-              start_date: "2025-04-17 00:00:00",
-              duration: 1,
-              text: "Task #2.4",
-              progress: 0.7,
-              parent: 14,
-              open: true,
-              end_date: "2025-04-18 00:00:00"
-            },
-            {
-              id: 15,
-              start_date: "2025-04-05 00:00:00",
-              duration: 3,
-              text: "Task #3",
-              progress: 0.6,
-              parent: 12,
-              open: true,
-              end_date: "2025-04-08 00:00:00"
-            },
-            {
-              id: 16,
-              start_date: "2025-04-04 00:00:00",
-              duration: 1,
-              text: "Task #4",
-              progress: 0.2,
-              parent: 12,
-              render: "split",
-              end_date: "2025-04-05 00:00:00"
-            },
-            {
-              id: 22,
-              start_date: "2025-04-06 00:00:00",
-              duration: 1,
-              text: "Task #4.1",
-              progress: 1,
-              parent: 16,
-              open: true,
-              end_date: "2025-04-07 00:00:00"
-            },
-            {
-              id: 23,
-              start_date: "2025-04-08 00:00:00",
-              duration: 2,
-              text: "Task #4.2",
-              progress: 1,
-              parent: 16,
-              open: true,
-              end_date: "2025-04-10 00:00:00"
-            },
-            {
-              id: 24,
-              start_date: "2025-04-13 00:00:00",
-              duration: 0,
-              text: "Task #4.3",
-              progress: 0,
-              parent: 16,
-              open: true,
-              type: "milestone",
-              end_date: "2025-04-13 00:00:00"
-            },
+            { id: 20, start_date: "2025-04-12 00:00:00", duration: 2, text: "Task #2.3", progress: 0.5, parent: 14, open: true, end_date: "2025-04-14 00:00:00" },
+            { id: 21, start_date: "2025-04-17 00:00:00", duration: 1, text: "Task #2.4", progress: 0.7, parent: 14, open: true, end_date: "2025-04-18 00:00:00" },
+            { id: 15, start_date: "2025-04-05 00:00:00", duration: 3, text: "Task #3", progress: 0.6, parent: 12, open: true, end_date: "2025-04-08 00:00:00" },
+            { id: 16, start_date: "2025-04-04 00:00:00", duration: 1, text: "Task #4", progress: 0.2, parent: 12, render: "split", end_date: "2025-04-05 00:00:00" },
+            { id: 22, start_date: "2025-04-06 00:00:00", duration: 1, text: "Task #4.1", progress: 1, parent: 16, open: true, end_date: "2025-04-07 00:00:00" },
+            { id: 23, start_date: "2025-04-08 00:00:00", duration: 2, text: "Task #4.2", progress: 1, parent: 16, open: true, end_date: "2025-04-10 00:00:00" },
+            { id: 24, start_date: "2025-04-13 00:00:00", duration: 0, text: "Task #4.3", progress: 0, parent: 16, open: true, type: "milestone", end_date: "2025-04-13 00:00:00" },
             { id: 17, start_date: "2025-04-16 00:00:00", duration: 2, text: "Task #5", progress: 0.5, parent: 12, open: true, end_date: "2025-04-18 00:00:00" },
           ],
           links: [],
           baselines: [],
-        }
-      );
+      };
 
-      console.log("Gantt initialized with version:", gantt.version);
+      // 默认加载静态数据（也可以切换为 generateData(2000)）
+      ganttManager.loadData(staticData);
+
+      console.log("Gantt initialized with version:", ganttManager.gantt.version);
     </script>
   </body>
 </html>
