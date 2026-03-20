@@ -350,13 +350,19 @@ export default class GanttManager {
       this.gantt.attachEvent("onDataRender", handleDataChange)
     );
 
-    // 监听网格调整大小事件
+    // 监听网格调整大小事件，使用 requestAnimationFrame 节流优化性能
+    let resizeFrame;
     this.eventIds.push(
       this.gantt.attachEvent("onGanttLayoutResize", (newGridWidth) => {
-        this.options.gridWidth = newGridWidth;
-        this.gantt.config.layout = getGridAndChart(newGridWidth);
-        this.gantt.resetLayout();
-        this.gantt.render();
+        if (resizeFrame) {
+            cancelAnimationFrame(resizeFrame);
+        }
+        resizeFrame = requestAnimationFrame(() => {
+            this.options.gridWidth = newGridWidth;
+            this.gantt.config.layout = getGridAndChart(newGridWidth);
+            this.gantt.resetLayout();
+            this.gantt.render();
+        });
       })
     );
   }
