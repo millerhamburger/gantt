@@ -1,5 +1,6 @@
 import { gantt } from "./dhtmlxgantt.es.js";
 import { locale } from "./config/locale.es.js";
+import { getGridAndChart, onlyGrid, onlyChart } from "./config/layout.es.js";
 
 /**
  * 甘特图管理类
@@ -55,10 +56,12 @@ export default class GanttManager {
     const config = this.gantt.config;
 
     // 设置网格宽度
-    config.grid_width = this.options.gridWidth;
+    // config.grid_width = this.options.gridWidth;
     config.date_format = "%Y-%m-%d %H:%i:%s"; // 数据日期格式
     config.order_branch = true; // 允许拖拽重新排序任务
     config.order_branch_free = true; // 允许在不同层级间自由拖拽任务
+
+    config.layout  = getGridAndChart(this.options.gridWidth);
 
     // 默认的时间刻度配置（月-日）
     config.scales = [
@@ -443,21 +446,17 @@ export default class GanttManager {
    */
   setViewMode(mode) {
     if (mode === "grid") {
-      this.gantt.config.show_grid = true;
-      this.gantt.config.show_chart = false;
+      this.gantt.config.layout = onlyGrid;
     } else if (mode === "gantt") {
-      this.gantt.config.show_grid = false;
-      this.gantt.config.show_chart = true;
+      this.gantt.config.layout = onlyChart;
+
     } else {
       // split
       // 恢复网格默认宽度
-      this.gantt.config.grid_width = this.options.gridWidth;
-      this.gantt.config.show_grid = true;
-      this.gantt.config.show_chart = true;
-
+      this.gantt.config.layout = getGridAndChart(this.options.gridWidth);
     }
 
-    this.gantt.render();
+    this.gantt.resetLayout();
   }
 
   /**
