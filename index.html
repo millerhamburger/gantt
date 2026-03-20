@@ -2,7 +2,7 @@
  * @Author: YEYI millerye1995@foxmail.com
  * @Date: 2026-02-26 10:34:00
  * @LastEditors: YEYI millerye1995@foxmail.com
- * @LastEditTime: 2026-03-18 19:46:31
+ * @LastEditTime: 2026-03-20 16:16:00
  * @FilePath: \gantt\index.html
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -75,6 +75,13 @@
   </head>
   <body>
     <div class="gantt_control">
+      <button id="expand_tree">
+        展开
+      </button>
+      <button id="collapse_tree">
+        收起
+      </button>
+      <div class="separator"></div>
       <button id="toggle_critical" class="active">
         关键路径
       </button>
@@ -121,6 +128,17 @@
       ganttManager.init();
 
       // --- 绑定工具栏事件开始 ---
+      const expandTreeBtn = document.getElementById("expand_tree");
+      const collapseTreeBtn = document.getElementById("collapse_tree");
+
+      expandTreeBtn.addEventListener("click", () => {
+          ganttManager.toggleTaskTree(true);
+      });
+
+      collapseTreeBtn.addEventListener("click", () => {
+          ganttManager.toggleTaskTree(false);
+      });
+
       const toggleCriticalBtn = document.getElementById("toggle_critical");
       toggleCriticalBtn.addEventListener("click", () => {
           const isActive = ganttManager.toggleCritical();

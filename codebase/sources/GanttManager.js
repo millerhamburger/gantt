@@ -24,6 +24,7 @@ export default class GanttManager {
 
     this.dataChangeCallback = null; // 数据变更时的回调函数
     this.eventIds = []; // 存储绑定的事件ID，用于销毁时解绑
+    this.isTreeExpanded = true; // 记录当前树的展开状态，默认为展开
   }
 
   /**
@@ -373,6 +374,26 @@ export default class GanttManager {
    */
   setDataChangeCallback(callback) {
     this.dataChangeCallback = callback;
+  }
+
+  /**
+   * 切换任务树的展开/收起状态
+   * @param {boolean} [expand] - 可选，强制设置为展开(true)或收起(false)；若不传则自动切换状态
+   * @returns {boolean} 切换后的树展开状态
+   */
+  toggleTaskTree(expand) {
+    if (typeof expand === 'boolean') {
+      this.isTreeExpanded = expand;
+    } else {
+      this.isTreeExpanded = !this.isTreeExpanded;
+    }
+
+    this.gantt.eachTask((task) => {
+      task.$open = this.isTreeExpanded;
+    });
+    
+    this.gantt.render();
+    return this.isTreeExpanded;
   }
 
   /**
