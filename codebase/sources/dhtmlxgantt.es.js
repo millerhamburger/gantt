@@ -17587,8 +17587,12 @@ const Resizer = function(_super) {
         var newNextWidth = initialNextWidth - delta;
 
         if (newPrevWidth > 10 && newNextWidth > 10) {
-            gantt2.config.grid_width = newPrevWidth;
-            gantt2.render();
+            if (gantt2.checkEvent("onGanttLayoutResize")) {
+                gantt2.callEvent("onGanttLayoutResize", [newPrevWidth, e.clientX, e]);
+            } else {
+                gantt2.config.grid_width = newPrevWidth;
+                gantt2.render();
+            }
         }
       }
 

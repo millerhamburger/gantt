@@ -332,6 +332,13 @@ export default class GanttManager {
     this.gantt.attachEvent("onAfterTaskAdd", handleDataChange);
     this.gantt.attachEvent("onAfterTaskDelete", handleDataChange);
     this.gantt.attachEvent("onDataRender", handleDataChange);
+
+    // 监听网格调整大小事件
+    this.gantt.attachEvent("onGanttLayoutResize", (newGridWidth) => {
+      this.options.gridWidth = newGridWidth;
+      this.gantt.config.layout = getGridAndChart(newGridWidth);
+      this.gantt.resetLayout();
+    });
   }
 
   /**
