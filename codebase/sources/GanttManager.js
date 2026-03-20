@@ -127,11 +127,13 @@ export default class GanttManager {
    */
   setupColumns() {
     this.gantt.config.columns = [
-      { name: "text", label: "任务名称", tree: true }, // 树形结构列
+      { name: "text", label: "任务名称", tree: true, width: 200, min_width: 200 }, // 树形结构列
       {
         name: "base_start_date",
         label: "基线开始时间",
         align: "center",
+        width: 100,
+        min_width: 100,
         template: (task) => {
           const baselines = this.gantt.getTaskBaselines(task.id);
           if (baselines && baselines.length !== 0) {
@@ -153,6 +155,8 @@ export default class GanttManager {
         name: "base_end_date",
         label: "基线完成时间",
         align: "center",
+        width: 100,
+        min_width: 100,
         template: (task) => {
           const baselines = this.gantt.getTaskBaselines(task.id);
           if (baselines && baselines.length !== 0) {
@@ -174,6 +178,8 @@ export default class GanttManager {
         name: "base_duration",
         label: "基线工期",
         align: "center",
+        width: 60,
+        min_width: 60,
         template: (task) => {
           const baselines = this.gantt.getTaskBaselines(task.id);
           if (baselines && baselines.length !== 0) {
@@ -189,18 +195,22 @@ export default class GanttManager {
           return "-";
         },
       },
-      { name: "start_date", label: "开始时间", align: "center" },
-      { name: "end_date", label: "完成时间", align: "center" },
+      { name: "start_date", label: "开始时间", align: "center", width: 100, min_width: 100 },
+      { name: "end_date", label: "完成时间", align: "center", width: 100, min_width: 100 },
       {
         name: "duration",
         label: "工期",
         align: "center",
+        width: 60,
+        min_width: 40,
         template: (task) => task.duration + "天",
       },
       {
         name: "status",
         label: "执行情况",
         align: "center",
+        width: 80,
+        min_width: 60,
         template: (task) => {
           if (task.progress === 0) return "未开始";
           return task.progress === 1 ? "已完成" : "进行中";
@@ -210,15 +220,19 @@ export default class GanttManager {
         name: "progress",
         label: "完成比例",
         align: "center",
+        width: 60,
+        min_width: 60,
         template: (task) => Math.round(task.progress * 100) + "%",
       },
       {
         name: "description",
         label: "任务描述",
         align: "center",
+        width: 150,
+        min_width: 150,
         template: (task) => task.description || "-",
       },
-      { name: "add", label: "" }, // 添加子任务的按钮列
+      { name: "add", label: "", width: 44, min_width: 44 }, // 添加子任务的按钮列
     ];
   }
 
