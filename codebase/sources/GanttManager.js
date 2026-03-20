@@ -23,6 +23,7 @@ export default class GanttManager {
     this.options = { ...defaultOptions, ...options };
 
     this.dataChangeCallback = null; // 数据变更时的回调函数
+    this.eventIds = []; // 存储绑定的事件ID，用于销毁时解绑
   }
 
   /**
@@ -326,19 +327,24 @@ export default class GanttManager {
       }
     };
     // 监听任务、链接的增删改以及数据重新渲染事件
-    this.gantt.attachEvent("onAfterTaskUpdate", handleDataChange);
-    this.gantt.attachEvent("onAfterLinkAdd", handleDataChange);
-    this.gantt.attachEvent("onAfterLinkDelete", handleDataChange);
-    this.gantt.attachEvent("onAfterTaskAdd", handleDataChange);
-    this.gantt.attachEvent("onAfterTaskDelete", handleDataChange);
-    this.gantt.attachEvent("onDataRender", handleDataChange);
+    this.eventIds.push(
+      this.gantt.attachEvent("onAfterTaskUpdate", handleDataChange),
+      this.gantt.attachEvent("onAfterLinkAdd", handleDataChange),
+      this.gantt.attachEvent("onAfterLinkDelete", handleDataChange),
+      this.gantt.attachEvent("onAfterTaskAdd", handleDataChange),
+      this.gantt.attachEvent("onAfterTaskDelete", handleDataChange),
+      this.gantt.attachEvent("onDataRender", handleDataChange)
+    );
 
     // 监听网格调整大小事件
-    this.gantt.attachEvent("onGanttLayoutResize", (newGridWidth) => {
-      this.options.gridWidth = newGridWidth;
-      this.gantt.config.layout = getGridAndChart(newGridWidth);
-      this.gantt.resetLayout();
-    });
+    this.eventIds.push(
+      this.gantt.attachEvent("onGanttLayoutResize", (newGridWidth) => {
+        this.options.gridWidth = newGridWidth;
+        this.gantt.config.layout = getGridAndChart(newGridWidth);
+        this.gantt.resetLayout();
+        this.gantt.render();
+      })
+    );
   }
 
   /**
@@ -501,5 +507,26 @@ export default class GanttManager {
    */
   loadData(data) {
     this.gantt.parse(data);
+  }
+
+  /**
+   * 销毁甘特图实例，解绑事件并清理资源
+   */
+  destroy() {
+    // 1. 解绑所有在 setupEvents 中绑定的事件
+    if (this.eventIds && this.eventIds.length > 0) {
+      this.eventIds.forEach(id => {
+        this.gantt.detachEvent(id);
+      });
+      this.eventIds = [];
+    }
+
+    // 2. 清理外部传入的回调函数
+    this.dataChangeCallback = null;
+
+    // 3. 销毁甘特图实例（dhtmlx-gantt 原生方法）
+    if (this.gantt && typeof this.gantt.destructor === 'function') {
+      this.gantt.destructor();
+    }
   }
 }
